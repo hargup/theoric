@@ -3,336 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Theoric — Solving the GPU Programming Problem</title>
+    <title>Theoric</title>
     <meta name="description" content="Theoric builds formally verified, provably optimal GPU programs. Correctness, performance, and portability — solved before code ever touches a chip.">
-    <meta property="og:title" content="Theoric — Solving the GPU Programming Problem">
+    <meta property="og:title" content="Theoric">
     <meta property="og:description" content="Formally verified, provably optimal GPU programs. Correctness, performance, and portability — solved before code ever touches a chip.">
     <meta property="og:type" content="website">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
     <style>
-        *, *::before, *::after {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --bg: #0a0a0f;
-            --bg-subtle: #12121a;
-            --text: #e8e8ed;
-            --text-muted: #8888a0;
-            --accent: #6366f1;
-            --accent-glow: rgba(99, 102, 241, 0.15);
-            --border: rgba(255, 255, 255, 0.06);
-        }
-
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-            overflow: hidden;
-        }
-
-        /* Subtle grid background */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image:
-                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-            background-size: 60px 60px;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        /* Gradient orb */
-        body::after {
-            content: '';
-            position: fixed;
-            top: -30%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 800px;
-            height: 800px;
-            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .container {
-            position: relative;
-            z-index: 1;
-            max-width: 640px;
-            width: 100%;
-            text-align: center;
-        }
-
-        .logo-mark {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 3rem;
-        }
-
-        .logo-icon {
-            width: 36px;
-            height: 36px;
-            border: 2px solid var(--accent);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Source Serif 4', serif;
-            font-weight: 600;
-            font-size: 18px;
-            color: var(--accent);
-            background: var(--accent-glow);
-        }
-
-        .logo-text {
-            font-size: 1.5rem;
-            font-weight: 600;
-            letter-spacing: -0.02em;
-            color: var(--text);
-        }
-
-        h1 {
-            font-family: 'Source Serif 4', serif;
-            font-size: clamp(2rem, 5vw, 3.2rem);
-            font-weight: 600;
-            line-height: 1.2;
-            letter-spacing: -0.02em;
-            margin-bottom: 1.5rem;
-            color: var(--text);
-        }
-
-        h1 span {
-            color: var(--accent);
-        }
-
-        .subtitle {
-            font-size: 1.125rem;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+            color: #1a1a1a;
             line-height: 1.7;
-            color: var(--text-muted);
-            max-width: 520px;
-            margin: 0 auto 3rem;
-            font-weight: 300;
+            font-size: 16px;
         }
-
-        .cta-section {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .email-form {
-            display: flex;
-            gap: 0.5rem;
-            width: 100%;
-            max-width: 420px;
-        }
-
-        .email-input {
-            flex: 1;
-            padding: 0.8rem 1.2rem;
-            background: var(--bg-subtle);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            color: var(--text);
-            font-family: 'Inter', sans-serif;
-            font-size: 0.95rem;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .email-input::placeholder {
-            color: var(--text-muted);
-        }
-
-        .email-input:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px var(--accent-glow);
-        }
-
-        .submit-btn {
-            padding: 0.8rem 1.6rem;
-            background: var(--accent);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.95rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-
-        .submit-btn:hover {
-            background: #5558e6;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
-        }
-
-        .success-message {
-            display: none;
-            color: #34d399;
-            font-size: 0.95rem;
-            font-weight: 500;
-            padding: 0.8rem;
-        }
-
-        .contact-line {
-            margin-top: 1rem;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-
-        .contact-line a {
-            color: var(--text-muted);
-            text-decoration: none;
-            border-bottom: 1px solid rgba(136, 136, 160, 0.3);
-            transition: color 0.2s, border-color 0.2s;
-        }
-
-        .contact-line a:hover {
-            color: var(--text);
-            border-color: var(--text);
-        }
-
-        /* Proof badge */
-        .proof-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            margin-bottom: 2rem;
-            padding: 0.4rem 1rem;
-            background: var(--accent-glow);
-            border: 1px solid rgba(99, 102, 241, 0.2);
-            border-radius: 100px;
-            font-size: 0.8rem;
-            color: var(--accent);
-            font-weight: 500;
-            letter-spacing: 0.03em;
-        }
-
-        .proof-badge::before {
-            content: '';
-            width: 6px;
-            height: 6px;
-            background: var(--accent);
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
-
-        footer {
-            position: fixed;
-            bottom: 2rem;
-            left: 0;
-            right: 0;
-            text-align: center;
-            z-index: 1;
-        }
-
-        .footer-links {
-            display: flex;
-            justify-content: center;
-            gap: 1.5rem;
-            font-size: 0.8rem;
-        }
-
-        .footer-links a {
-            color: var(--text-muted);
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-
-        .footer-links a:hover {
-            color: var(--text);
-        }
-
-        @media (max-width: 480px) {
-            .email-form {
-                flex-direction: column;
-            }
-
-            .submit-btn {
-                width: 100%;
-            }
-
-            footer {
-                position: relative;
-                margin-top: 4rem;
-                bottom: auto;
-            }
-        }
+        h1 { font-size: 1.6rem; font-weight: 600; margin-bottom: 2rem; }
+        p { margin-bottom: 1.2rem; }
+        strong { font-weight: 600; }
+        a { color: #2563eb; text-decoration: none; }
+        a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="logo-mark">
-            <div class="logo-icon">T</div>
-            <span class="logo-text">Theoric</span>
-        </div>
-
-        <div class="proof-badge">Coming Soon</div>
-
-        <h1>GPU programs, <span>provably correct</span></h1>
-
-        <p class="subtitle">
-            We model GPU hardware mathematically and verify correctness as a proof — before code ever touches a chip. Performance, portability, and correctness by construction.
-        </p>
-
-        <div class="cta-section">
-            <form class="email-form" id="signup-form">
-                <input type="email" class="email-input" placeholder="you@company.com" required id="email-input">
-                <button type="submit" class="submit-btn">Get updates</button>
-            </form>
-            <div class="success-message" id="success-msg">Thanks! We'll be in touch.</div>
-            <p class="contact-line">
-                Or reach out directly — <a href="mailto:harsh@theoric.com">harsh@theoric.com</a>
-            </p>
-        </div>
-    </div>
-
-    <footer>
-        <div class="footer-links">
-            <a href="https://x.com/hargup13" target="_blank" rel="noopener">X / Twitter</a>
-            <a href="https://linkedin.com/in/hargup" target="_blank" rel="noopener">LinkedIn</a>
-        </div>
-    </footer>
-
-    <script>
-        document.getElementById('signup-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const email = document.getElementById('email-input').value;
-            // Store in localStorage as a simple solution — replace with a real backend later
-            const emails = JSON.parse(localStorage.getItem('theoric_signups') || '[]');
-            emails.push({ email, date: new Date().toISOString() });
-            localStorage.setItem('theoric_signups', JSON.stringify(emails));
-
-            // Show success
-            this.style.display = 'none';
-            document.getElementById('success-msg').style.display = 'block';
-        });
-    </script>
+    <h1>Theoric</h1>
+    <p><strong>Modern GPU programming is backwards.</strong></p>
+    <p>We take the most expensive machines humanity has ever built and we treat them like a slot machine: write code, run it, pray it doesn't deadlock, profile it, tweak it, rerun it—until we either get "good enough" or we buy more GPUs.</p>
+    <p>Everything we need to make GPU software correct and fast is known <strong>before</strong> we run it.</p>
+    <p><strong>Theoric makes it happen.</strong></p>
+    <p><strong>Read the manifesto →</strong> <a href="/manifesto">theoric.com/manifesto</a></p>
+    <p><strong>Contact:</strong> <a href="mailto:harsh@theoric.com">harsh@theoric.com</a></p>
+    <p><strong>DM:</strong> <a href="https://x.com/hargup13" target="_blank" rel="noopener">x.com/hargup13</a></p>
 </body>
 </html>
