@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theoric Manifesto</title>
+    <meta name="description" content="The Theoric Manifesto — why we're building formally verified, provably optimal GPU software.">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+            color: #1a1a1a;
+            line-height: 1.7;
+            font-size: 16px;
+        }
+        h1 { font-size: 1.6rem; font-weight: 600; margin-bottom: 0.3rem; }
+        .date { color: #666; font-style: italic; margin-bottom: 2rem; display: block; }
+        p { margin-bottom: 1.2rem; }
+        strong { font-weight: 600; }
+        a { color: #2563eb; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        ul { margin-bottom: 1.2rem; padding-left: 1.5rem; }
+        li { margin-bottom: 0.5rem; }
+        .signature { margin-top: 2rem; color: #444; }
+        .back { margin-top: 3rem; }
+    </style>
+</head>
+<body>
+    <h1>Theoric Manifesto</h1>
+    <span class="date">1st Dec 2025</span>
+
+    <p>Today, programming GPU sucks! First your code just doesn't run. Then it stalls and deadlocks. Then you accidentally access invalid memory, boom error again.</p>
+
+    <p>When you finally get it working, efficiency is like 10%. Then you study a lot, learn about cache hierarchies, and bank conflicts and the number of tensor cores your GPU has.</p>
+
+    <p>You work a lot, find all the right launch parameters, fuse all the kernels, figure out the right memory layout and access patterns, put everything together, fix all the bugs! Finally 70% efficiency!</p>
+
+    <p>At this point instead of pushing efficiency up further to 90%, you think it would be better to add more GPUs. So you rent a server with 8 GPUs instead of 1. More compute, great! Not so soon, you run your original code, and turns out you are getting only 15% of the available compute!</p>
+
+    <p>So you learn about inter GPU communication, remote atomics so put everything together, and looks like you have got it. And indeed you have, for that specific GPU, for that specific configuration, for that specific algorithm.</p>
+
+    <p>Different configuration, different algorithm, different GPU, you have to do it all over again!</p>
+
+    <p>That's why we are building Theoric!</p>
+
+    <p><strong>Theoric aims to create the perfect GPU software by the power of AI</strong>, perfect GPU software which:</p>
+
+    <ul>
+        <li>Doesn't error out or deadlock (for single GPU, multi-GPU or multi-node clusters)</li>
+        <li>Is algorithmically and numerically correct</li>
+        <li>AND the code runs as close to the theoretical max performance as possible</li>
+    </ul>
+
+    <p><strong>Theoric does this by:</strong></p>
+
+    <ul>
+        <li>Going as close to the metal as possible, to remove all the abstraction overhead</li>
+        <li>Accurately modeling the hardware; FLOPS, caches, memory bandwidth, network latency, everything, layout &amp; configuration in every way</li>
+        <li>And simulating correctness and performance at compile time instead of runtime so that you know about the correctness &amp; performance of your code before you even touch the hardware!</li>
+    </ul>
+
+    <p>This is GPU code equivalent of testing your rockets in simulation before launching. Because GPUs can be as (actually more!) expensive than rockets!</p>
+
+    <div class="signature">
+        <p>Harsh Gupta<br><a href="https://hargup.in">hargup.in</a></p>
+    </div>
+
+    <div class="back">
+        <a href="/">← Back to theoric.com</a>
+    </div>
+</body>
+</html>
