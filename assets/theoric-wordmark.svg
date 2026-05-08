@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="427" height="43" viewBox="-4 -4 427 43" role="img" aria-labelledby="title desc" color="#101010">
+  <title id="title">Theoric wordmark</title>
+  <desc id="desc">Custom geometric Theoric wordmark without the standalone structural T mark.</desc>
+  <path transform="translate(-166 -35)" fill="currentColor" fill-rule="evenodd" d="M166 35H207V42H191V70H182V42H166Z M233 35H242V49H266V35H275V70H266V56H242V70H233Z M303 35H342V42H312V49H339V56H312V63H342V70H303Z M375 35H406Q412 35 412 41V64Q412 70 406 70H375Q369 70 369 64V41Q369 35 375 35Z M378 42H403V63H378Z M439 35H474Q480 35 480 41V52Q480 58 474 58H473L480 70H471L463 58H448V70H439Z M448 42H471V52H448Z M509 35H518V70H509Z M551 35H585V42H555V63H585V70H551Q545 70 545 64V41Q545 35 551 35Z"/>
+</svg>

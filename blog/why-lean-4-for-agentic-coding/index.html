@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Why am I betting on Lean 4 for agentic coding? | Theoric</title>
+    <meta name="description" content="Lean 4 can potentially solve the unreliability of AI coding agents.">
+    <link rel="canonical" href="https://theoric.com/blog/why-lean-4-for-agentic-coding/">
+    <link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+    <meta property="og:title" content="Why am I betting on Lean 4 for agentic coding? | Theoric">
+    <meta property="og:description" content="Lean 4 can potentially solve the unreliability of AI coding agents.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://theoric.com/blog/why-lean-4-for-agentic-coding/">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Why am I betting on Lean 4 for agentic coding? | Theoric">
+    <meta name="twitter:description" content="Lean 4 can potentially solve the unreliability of AI coding agents.">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+            background: #FAFAF8;
+            color: #101010;
+            line-height: 1.7;
+            font-size: 16px;
+        }
+        .logo {
+            display: block;
+            width: 220px;
+            height: auto;
+            margin-bottom: 3rem;
+        }
+        h1 { font-size: 1.8rem; line-height: 1.25; font-weight: 600; margin-bottom: 0.4rem; }
+        .date { color: #555; display: block; margin-bottom: 2.2rem; }
+        p { margin-bottom: 1.2rem; }
+        ul, ol { margin-bottom: 1.2rem; padding-left: 1.5rem; }
+        li { margin-bottom: 0.5rem; }
+        a { color: #101010; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.18em; }
+        footer {
+            display: flex;
+            gap: 1rem;
+            margin-top: 3rem;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+    <a href="../../" aria-label="Theoric home"><img class="logo" src="../../assets/theoric-stylized-wordmark.svg" alt="Theoric"></a>
+
+    <article>
+        <h1>Why am I betting on Lean 4 for agentic coding?</h1>
+        <span class="date">December 22, 2025</span>
+
+        <p>Because Lean 4 can potentially solve the unreliability of AI coding agents.</p>
+
+        <p>AI coding agents have become really, really good. But they remain unreliable. And unreliable in ways which are very sinister, hard to detect, and extremely hard to tackle.</p>
+
+        <p>They can write API servers, they can write front-ends, they can write features, they can write CLIs. You ask them to add a caching module to a system? They can do that. You ask them to fix CORS issues? They can do that. They can do pretty much everything you ask them to do, but in isolation.</p>
+
+        <p>And what it leads to is agents which are extremely hard to rely on and extremely hard to build solid stuff upon.</p>
+
+        <ul>
+            <li>When you are writing a web server and you have a caching layer written, you add a new API. You do not want to be at a place where you suddenly just do not have caching anymore.</li>
+            <li>But these things happen quite a lot with AI agents.</li>
+            <li>They will write one thing and they will fumble something else.</li>
+            <li>They will forget the whole project semantics.</li>
+        </ul>
+
+        <p>They are really brilliant and yet extremely stupid in ways which are hard to measure. There is an extreme jaggedness in terms of how they behave.</p>
+
+        <p>Lean 4 is an interactive theorem prover. It is extensively used by mathematicians. You define axioms and theorems and do more stuff on top of it. But you can also use Lean 4 for general-purpose programming.</p>
+
+        <p>The way you do it is essentially you write a program as a proof.</p>
+
+        <p>For example, let us look at a function to sort a list:</p>
+
+        <ul>
+            <li>The general procedural way: Iterate through the array, compare index i and i + 1, swap if needed.</li>
+            <li>The declarative way: list.sort(). Trust the library.</li>
+            <li>The proof way, dependent types: You define a type called SortedPermutation. This type represents a list that is verified to be sorted and contains exactly the same elements as the input. You define the function signature so that it takes a List and must return a SortedPermutation. You write the code. You write a proof that your code has the properties you want.</li>
+        </ul>
+
+        <p>Here is the magic: In Python or TypeScript, types describe the shape of data, for example, this is a List. In Lean, types can describe the behavior of data, for example, this is a List that is sorted.</p>
+
+        <p>To write that sort function in Lean, you have to do double the work:</p>
+
+        <ol>
+            <li>The implementation: You write the actual sorting logic, Merge Sort, Quick Sort, etc.</li>
+            <li>The proof: You have to prove to the compiler that your implementation actually results in a SortedPermutation.</li>
+        </ol>
+
+        <p>For a human, this double work is tedious and fairly hard. But for an AI agent, this is the missing link.</p>
+
+        <p>When an agent works with Lean, we fix the type definitions first. We tell it: You must produce a SortedPermutation. If the agent writes code that drops an element or fails to sort correctly, the code will not compile.</p>
+
+        <p>We do not need to trust the agent's logic. If the code compiles, we can blindly trust the implementation to be right, because the compiler has verified the proof.</p>
+
+        <p>Basically, you can codify all the invariants of the system and you can codify all the rules of the system.</p>
+
+        <ul>
+            <li>If you forget caching a certain API endpoint, you will know that immediately. Because the compiler and the system keep track of all these invariants.</li>
+            <li>You can build newer rules, make them part of the system, build newer properties, make them part of the system.</li>
+        </ul>
+
+        <p>At least in theory, it feels like if we can use Lean 4 well, it will remove all of these issues of agents explicitly doing stupid things.</p>
+
+        <p>It will remove a whole class of errors:</p>
+
+        <ul>
+            <li>Similar to how all memory management errors are gone with modern languages like Rust.</li>
+            <li>Similar to how works on my machine errors are gone with Docker.</li>
+            <li>Similar to how type errors go away with strong typing systems.</li>
+            <li>Similar to how dependency errors go away with good package managers.</li>
+        </ul>
+
+        <p>A huge class of logical errors and requirement errors will just go away. You will be at a much stronger place and a much more solid base to work from.</p>
+
+        <p>Lean 4 exposes all the language internals through LSP, which AI can use very well. Lean 4 tends to be verbose and it tends to be rigid for a human to write. It is a different kind of program writing; there is a lot of information to work with.</p>
+
+        <p>But AI is better equipped to deal with those things than a human.</p>
+
+        <ul>
+            <li>They can deal with much larger contexts.</li>
+            <li>They can deal with much more text.</li>
+            <li>They do not get tired writing the boring proofs that humans hate.</li>
+        </ul>
+    </article>
+
+    <footer>
+        <a href="../../">Home</a>
+        <a href="../">Blog</a>
+        <a href="mailto:team@theoric.com">Contact</a>
+    </footer>
+</body>
+</html>

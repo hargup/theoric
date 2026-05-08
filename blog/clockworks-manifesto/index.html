@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Clockworks Manifesto | Theoric</title>
+    <meta name="description" content="Why we're building Clockworks: provably correct, provably optimal GPU software.">
+    <link rel="canonical" href="https://theoric.com/blog/clockworks-manifesto/">
+    <link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+    <meta property="og:title" content="The Clockworks Manifesto | Theoric">
+    <meta property="og:description" content="Why we're building Clockworks: provably correct, provably optimal GPU software.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://theoric.com/blog/clockworks-manifesto/">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="The Clockworks Manifesto | Theoric">
+    <meta name="twitter:description" content="Why we're building Clockworks: provably correct, provably optimal GPU software.">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+            background: #FAFAF8;
+            color: #101010;
+            line-height: 1.7;
+            font-size: 16px;
+        }
+        .logo {
+            display: block;
+            width: 220px;
+            height: auto;
+            margin-bottom: 3rem;
+        }
+        h1 { font-size: 1.8rem; line-height: 1.25; font-weight: 600; margin-bottom: 0.4rem; }
+        .date { color: #555; display: block; margin-bottom: 2.2rem; }
+        p { margin-bottom: 1.2rem; }
+        strong { font-weight: 600; }
+        ul, ol { margin-bottom: 1.2rem; padding-left: 1.5rem; }
+        li { margin-bottom: 0.5rem; }
+        a { color: #101010; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.18em; }
+        .signature { margin-top: 2.5rem; color: #444; }
+        footer {
+            display: flex;
+            gap: 1rem;
+            margin-top: 3rem;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+    <a href="../../" aria-label="Theoric home"><img class="logo" src="../../assets/theoric-stylized-wordmark.svg" alt="Theoric"></a>
+
+    <article>
+        <h1>The Clockworks Manifesto</h1>
+        <span class="date">February 7, 2026</span>
+
+        <p>Today, programming GPUs sucks! First your code just doesn't run. Then it stalls and deadlocks. Then you accidentally access invalid memory, boom error again.</p>
+
+        <p>When you finally get it working, efficiency is like 10%. Then you study a lot, learn about cache hierarchies, and bank conflicts and the number of tensor cores your GPU has.</p>
+
+        <p>You work a lot, find all the right launch parameters, fuse all the kernels, figure out the right memory layout and access patterns, put everything together, fix all the bugs! Finally 70% efficiency!</p>
+
+        <p>At this point instead of pushing efficiency up further to 90%, you think it would be better to add more GPUs. So you rent a server with 8 GPUs instead of 1. More compute, great! Not so soon, you run your original code, and turns out you are getting only 15% of the available compute!</p>
+
+        <p>So you learn about inter GPU communication, remote atomics so put everything together, and looks like you have got it. And indeed you have, for that specific GPU, for that specific configuration, for that specific algorithm.</p>
+
+        <p>Different configuration, different algorithm, different GPU, you have to do it all over again!</p>
+
+        <p>That's why we are building Clockworks at Theoric!</p>
+
+        <p><strong>Clockworks aims to create the perfect GPU software by the power of AI</strong>, perfect GPU software which:</p>
+
+        <ul>
+            <li>Doesn't error out or deadlock (for single GPU, multi-GPU or multi-node clusters)</li>
+            <li>Is algorithmically and numerically correct</li>
+            <li>AND the code runs as close to the theoretical max performance as possible</li>
+        </ul>
+
+        <p><strong>Clockworks does this by:</strong></p>
+
+        <ul>
+            <li>Going as close to the metal as possible, to remove all the abstraction overhead</li>
+            <li>Accurately modeling the hardware; FLOPS, caches, memory bandwidth, network latency, everything, layout &amp; configuration in every way</li>
+            <li>And simulating correctness and performance at compile time instead of runtime so that you know about the correctness &amp; performance of your code before you even touch the hardware!</li>
+        </ul>
+
+        <p>This is the GPU-code equivalent of testing your rockets in simulation before launching. Because GPUs can be as expensive as (actually, more than) rockets!</p>
+
+        <div class="signature">
+            <p>Harsh Gupta<br><a href="https://hargup.in">hargup.in</a></p>
+        </div>
+    </article>
+
+    <footer>
+        <a href="../../">Home</a>
+        <a href="../">Blog</a>
+        <a href="mailto:team@theoric.com">Contact</a>
+    </footer>
+</body>
+</html>
