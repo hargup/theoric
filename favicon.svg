@@ -1,6 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-labelledby="title desc" color="#101010">
-  <title id="title">Theoric avatar icon</title>
-  <desc id="desc">Theoric structural T mark centered inside a rounded square container.</desc>
-  <rect x="16" y="16" width="96" height="96" rx="22" fill="#FAFAF8" stroke="#D8DDE1" stroke-width="1.25"/>
-  <path fill="currentColor" d="M24 31H104V45H74V82L60.75 97H54V45H24Z"/>
+  <title id="title">Theoric favicon</title>
+  <desc id="desc">Theoric structural T mark on a transparent background.</desc>
+  <path fill="currentColor" d="M16 22H112V39H76V83.4L60.1 101.4H52V39H16Z"/>
 </svg>
