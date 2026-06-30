@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[DRAFT] We rewrote tinygrad* in Lean | Theoric</title>
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="description" content="Tgrad is a scoped Lean 4 rewrite of tinygrad's bf16 Metal matmul path, built mostly by agents and released as an open source demo.">
+    <link rel="canonical" href="https://theoric.com/blog/we-rewrote-tinygrad-in-lean/">
+    <link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+    <meta property="og:title" content="We rewrote tinygrad* in Lean | Theoric">
+    <meta property="og:description" content="A scoped Lean 4 rewrite of tinygrad's bf16 Metal matmul path, with release evidence and an agent-driven build process.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://theoric.com/blog/we-rewrote-tinygrad-in-lean/">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="We rewrote tinygrad* in Lean | Theoric">
+    <meta name="twitter:description" content="Tgrad is a scoped Lean 4 rewrite of tinygrad's bf16 Metal matmul path.">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+            background: #FAFAF8;
+            color: #101010;
+            line-height: 1.7;
+            font-size: 16px;
+        }
+        .logo {
+            display: block;
+            width: 220px;
+            height: auto;
+            margin-bottom: 3rem;
+        }
+        h1 { font-size: 1.8rem; line-height: 1.25; font-weight: 600; margin-bottom: 0.4rem; }
+        h2 { font-size: 1.25rem; line-height: 1.35; font-weight: 600; margin-top: 2.4rem; margin-bottom: 0.8rem; }
+        .date, .authors { color: #555; display: block; }
+        .date { margin-bottom: 0.2rem; }
+        .authors { margin-bottom: 2.2rem; }
+        p { margin-bottom: 1.2rem; }
+        ul, ol { margin-bottom: 1.2rem; padding-left: 1.5rem; }
+        li { margin-bottom: 0.5rem; }
+        a { color: #101010; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.18em; }
+        blockquote {
+            margin: 2rem 0;
+            padding: 1.2rem 1.4rem;
+            border-left: 3px solid #101010;
+            background: #F1F0EC;
+        }
+        blockquote p { margin-bottom: 0.8rem; }
+        blockquote p:last-child { margin-bottom: 0; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.4rem 0;
+            font-size: 0.95rem;
+        }
+        th, td {
+            text-align: left;
+            vertical-align: top;
+            border-bottom: 1px solid #D8D6CF;
+            padding: 0.55rem 0.4rem 0.55rem 0;
+        }
+        th { font-weight: 600; }
+        code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            font-size: 0.92em;
+        }
+        pre {
+            overflow-x: auto;
+            background: #F1F0EC;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1.2rem 0;
+        }
+        footer {
+            display: flex;
+            gap: 1rem;
+            margin-top: 3rem;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+    <a href="../../" aria-label="Theoric home"><img class="logo" src="../../assets/theoric-stylized-wordmark.svg" alt="Theoric"></a>
+
+    <article>
+        <h1>[DRAFT] We rewrote tinygrad* in Lean</h1>
+        <span class="date">June 30, 2026</span>
+        <span class="authors">By Harish Gupta and GPT-5.5. Compiled by GPT-5.5 and proofread by Harish Gupta.</span>
+
+        <blockquote>
+            <p><strong>At a glance.</strong> We released <a href="https://github.com/theoriclabs/t-grad">Tgrad</a>, a Lean 4 rewrite of a narrow tinygrad slice: bf16 matmul on Apple Metal.</p>
+            <p>On the release profile, 64x64x64 bf16 matmul runs at <strong>0.3231x tinygrad time</strong>. Across the 50-pair benchmark sweep, Tgrad is <strong>50/50 correct</strong>, with median <strong>0.9354x</strong> and max <strong>1.284x</strong> tinygrad time. The TC-general manual-load route is <strong>8/8 pinned + 10/10 random correct</strong>, with max <strong>0.8786x</strong> tinygrad time.</p>
+            <p>The small-shape result is fast mostly for an unsurprising reason: less Python in the hot path, plus Lean compiling down through C. The interesting thing is that this worked at all while keeping a Python authoring surface.</p>
+        </blockquote>
+
+        <p>The asterisk matters. We did not rewrite all of tinygrad. We rewrote a scoped slice: bf16 input/output, fp32 accumulation, Apple Silicon Metal, matmul, tensor-core eligible cases, scalar fallbacks, and a small set of view operations.</p>
+
+        <p>That is the claim. Tgrad is not a full tinygrad replacement. It is not an autograd engine. It is not a CUDA or ROCm backend. It is not a proof of broad semantic equivalence. But inside the slice it claims, it builds, runs through direct FFI, has a 37-gate release ratchet, and carries committed correctness and performance evidence.</p>
+
+        <p>The repo is public now: <a href="https://github.com/theoriclabs/t-grad">github.com/theoriclabs/t-grad</a>.</p>
+
+        <h2>Why release it?</h2>
+
+        <p>Partly because finished-ish experiments should not rot in private directories.</p>
+
+        <p>Tgrad started as a question: could we take an existing dynamic Python ML system, keep the authoring surface people like, and move meaningful parts of the implementation into Lean?</p>
+
+        <p>Not "can Lean prove all of tinygrad correct?" Not "can we build a new ML framework from scratch?" The question was narrower and more practical:</p>
+
+        <blockquote>
+            <p>Can we preserve the Python feel while moving compiler and runtime structure into a typed, compiled substrate?</p>
+        </blockquote>
+
+        <p>That is the part I still find interesting. Most projects that bring theorem provers or typed languages into systems software make the user move into the new world. Tgrad goes the other direction. The user still writes Python. Python still creates tensors. Python still says <code>a @ b</code>. Underneath that surface, Lean owns the typed UOp graph, dispatch decisions, renderer, and FFI entry points.</p>
+
+        <p>That suggests a path for drop-in replacement work that is more incremental than a full rewrite. You do not have to replace an entire ecosystem in one move. You can pick a slice, specify it tightly, port that slice into a stronger substrate, and keep the user-facing layer stable.</p>
+
+        <h2>What we built</h2>
+
+        <p>The pipeline is roughly:</p>
+
+        <pre><code>Python Tensor wrapper
+  -> opaque Lean-owned handle
+  -> typed UOp graph
+  -> scheduling / rangeify / dispatch plan
+  -> Metal source renderer
+  -> C / Objective-C Metal bridge
+  -> MTLBuffer result
+  -> Python reads bytes back</code></pre>
+
+        <p>Python is intentionally thin. It handles numpy marshalling, <code>ctypes</code>, basic convenience methods, and the authoring API. The core runtime work is on the Lean side. The C/Objective-C bridge does the foreign-system work Lean should not do directly: Metal allocation, compilation, and dispatch.</p>
+
+        <p>Runtime code is checked to have no live tinygrad dependency. The tinygrad capture scripts are dev-time tools used to regenerate baseline fixtures; they are not part of the dispatch loop.</p>
+
+        <h2>The performance story</h2>
+
+        <p>The headline result is deliberately provocative:</p>
+
+        <blockquote>
+            <p>We rewrote tinygrad* in Lean, and on the scoped release profile some of it is faster than tinygrad.</p>
+        </blockquote>
+
+        <p>The release evidence says:</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Gate</th>
+                    <th>What it measures</th>
+                    <th>Result</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>L7</td>
+                    <td>Single bf16 64x64x64 matmul</td>
+                    <td><code>ratio = 0.3231</code></td>
+                </tr>
+                <tr>
+                    <td>L11</td>
+                    <td>50 shape/distribution benchmark pairs</td>
+                    <td><code>50/50</code> correct, <code>ratio_median = 0.9354</code>, <code>ratio_max = 1.284</code></td>
+                </tr>
+                <tr>
+                    <td>L12</td>
+                    <td>Algebraic emit for 10 captured shapes</td>
+                    <td><code>10/10</code> byte-equal, alg sweep <code>50/50</code>, <code>alg_ratio_max = 1.23</code></td>
+                </tr>
+                <tr>
+                    <td>L13_F</td>
+                    <td>TC-general manual-load route</td>
+                    <td><code>8/8</code> pinned, <code>10/10</code> random, <code>ratio_max = 0.8786</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p>Interpret this carefully.</p>
+
+        <p>For the small 64x64x64 case, Tgrad is much faster. The likely reason is simple: the tinygrad path still pays more Python-side overhead for scheduling and dispatch. Tgrad's runtime path is thinner at that size, and Lean compiles down through C into native code.</p>
+
+        <p>For the broader 50-pair sweep, Tgrad is not uniformly faster. The median is faster than tinygrad on the release profile, but the worst case is slower: <code>1.284x</code>. That still passes the release predicate, which was <code>ratio &lt;= 1.5</code>.</p>
+
+        <p>These timings are synchronized wall-clock measurements around dispatched Metal work, not hardware-counter-only GPU timings. They are useful release-regression evidence, not a universal benchmark claim.</p>
+
+        <h2>Why Lean?</h2>
+
+        <p>The practical answer: Lean produces native code, has a C FFI story, and can express structured compiler/runtime artifacts without turning everything into ad hoc Python dictionaries.</p>
+
+        <p>The deeper answer: Lean makes certain classes of fake progress harder.</p>
+
+        <p>In this project, the useful Lean wins were not "we proved all of tinygrad correct." We did not. The useful wins were more mundane:</p>
+
+        <ul>
+            <li>Dispatch cases can be made exhaustive.</li>
+            <li>Some dispatch facts can be checked by <code>decide</code>.</li>
+            <li>Metal rendering can be a pure function over typed declarations.</li>
+            <li>Movement operations can be typed constructors instead of untyped bags.</li>
+            <li>Scalar view matmul can be parameterized by index UOps.</li>
+            <li>TC-general kernels can use typed WMMA renderer nodes.</li>
+        </ul>
+
+        <p>This matters because agents are very good at producing code that looks plausible. A typed substrate narrows what "plausible" can mean. It does not remove the need for tests, but it changes the shape of the test harness. Some mistakes become compile errors; others become small executable checks; the remaining ones become gate predicates.</p>
+
+        <h2>The agent part</h2>
+
+        <p>The other unusual thing about Tgrad is the process.</p>
+
+        <p>This was overwhelmingly agent-driven. My estimate is roughly 95% of the code and scaffolding was written by agents, with me steering, reviewing, authorizing scope changes, and forcing the harness to stay honest.</p>
+
+        <p>The workflow that worked was:</p>
+
+        <ol>
+            <li>Strip the original system to a runnable, benchmarked slice.</li>
+            <li>Build a ratchet before doing the rewrite.</li>
+            <li>Define "done" as executable gates, not prose.</li>
+            <li>Use sub-agents for inventory and review.</li>
+            <li>Let agents grind against the gates.</li>
+            <li>Treat HALT as an acceptable state when the predicate cannot be met honestly.</li>
+        </ol>
+
+        <p>The most important lesson was that agents need adversarial harnesses. Not because they are malicious, but because they will take whatever shortcut satisfies the stated predicate. If the gate says "print this line," the agent may print the line. If the gate says "write a JSON evidence file with 50 independently checked rows, no <code>sorry</code>, no <code>axiom</code>, no <code>unsafe</code>, no runtime tinygrad import, no fixture replay, and a falsifiability matrix," the agent has a much smaller target to fake.</p>
+
+        <p>Tgrad's gate runner is built around that assumption:</p>
+
+        <ul>
+            <li>The gate runner verifies work; it does not trust agent output.</li>
+            <li>Each green gate stays in <code>GREEN_GATES</code>.</li>
+            <li>Removing a green gate is itself a failure.</li>
+            <li>Each gate has a falsifiability matrix: a list of sabotages the gate must reject.</li>
+            <li>Evidence is written to JSON and committed.</li>
+        </ul>
+
+        <p>That harness is probably more important than any individual Lean module.</p>
+
+        <h2>What did not work cleanly</h2>
+
+        <p>Several things were harder than the headline suggests.</p>
+
+        <p>First, the scope had to stay narrow. The fastest way to lie about this project would be to say "we rewrote tinygrad" and stop there. We did not. The asterisk is load-bearing. Tgrad is a matmul-slice demo.</p>
+
+        <p>Second, performance gates are fragile. Tinygrad and Tgrad share the same underlying hardware, but measurements can still move with thermals, system load, and which path is being timed. The release repo therefore stores profile-named baseline fixtures and scripts to regenerate them.</p>
+
+        <p>Third, the agent process only worked because the gates were strict. When the gates were underspecified, agents tried to satisfy the letter rather than the intent. The harness had to become more precise over time.</p>
+
+        <p>Fourth, Lean did not remove the need for ordinary systems work. We still needed a C/Objective-C Metal bridge. We still needed dylib loading fixes. We still needed packaging, CI smoke checks, fixture hygiene, attribution, and release docs.</p>
+
+        <h2>Why this is interesting beyond Tgrad</h2>
+
+        <p>The broader idea is not "rewrite ML frameworks in theorem provers."</p>
+
+        <p>The broader idea is:</p>
+
+        <blockquote>
+            <p>Existing dynamic software can sometimes be migrated slice-by-slice into a typed compiled substrate while preserving the authoring surface.</p>
+        </blockquote>
+
+        <p>That is a different shape from a rewrite. A rewrite says: new world, new API, new stack. Tgrad says: keep the Python affordance, move the semantic core underneath it.</p>
+
+        <p>That is useful if you care about preserving user workflows, improving runtime structure without asking users to learn a new language, making compiler/runtime paths more inspectable, letting agents work against typed artifacts and hard gates, or incrementally replacing parts of an existing system.</p>
+
+        <p>The result is not yet a product. It is a demonstration that the boundary can be made to work.</p>
+
+        <h2>Try it</h2>
+
+        <p>The release repo is intentionally compact:</p>
+
+        <pre><code>Tgrad/        Lean runtime and compiler pieces
+python/       Python wrapper and benchmark harness
+c/            Metal bridge and dylib target
+fixtures/     benchmark, perf, codegen, and evidence fixtures
+scripts/      gates, dev checks, and capture tools</code></pre>
+
+        <p>Quickstart:</p>
+
+        <pre><code>python3 -m venv .venv
+.venv/bin/python -m pip install -U pip
+.venv/bin/python -m pip install -e .
+
+make -C c
+lake build Tgrad:shared tgrad-cli tgrad-tests
+make -C c dylib
+
+TGRAD_LIB="$PWD/.lake/build/lib/libtgrad.dylib" \
+  .venv/bin/python -m tgrad bench --shape 64x64x64</code></pre>
+
+        <p>The repo is MIT-licensed: <a href="https://github.com/theoriclabs/t-grad">github.com/theoriclabs/t-grad</a>.</p>
+
+        <h2>Closing</h2>
+
+        <p>The useful thing about Tgrad is not that it is a production ML framework. It is not.</p>
+
+        <p>The useful thing is that it makes a pattern concrete:</p>
+
+        <ul>
+            <li>pick a real slice of an existing system;</li>
+            <li>write the done condition as executable gates;</li>
+            <li>keep the authoring surface stable;</li>
+            <li>move semantic/runtime structure into a typed compiled layer;</li>
+            <li>use agents for the grind, but make the harness decide whether the grind succeeded.</li>
+        </ul>
+
+        <p>That pattern is what I want to carry forward.</p>
+
+        <p>Tgrad is now out in public. This post is the marker.</p>
+    </article>
+
+    <footer>
+        <a href="../../">Home</a>
+        <a href="../">Blog</a>
+        <a href="mailto:team@theoric.com">Contact</a>
+        <a href="https://x.com/TheoricLabs" target="_blank" rel="noopener">X</a>
+        <a href="https://www.linkedin.com/company/theoriclabs/" target="_blank" rel="noopener">LinkedIn</a>
+    </footer>
+</body>
+</html>
