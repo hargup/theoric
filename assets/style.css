@@ -1,0 +1,114 @@
+/* Theoric — shared site styles
+   Hand-written static site; this stylesheet is linked from every page.
+   Body prose is set in a cross-platform system serif; headings and UI
+   (logo, dates, blog-list links, footer) are system sans for contrast. */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+    font-family: Charter, "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
+    max-width: 38rem;
+    margin: 0 auto;
+    padding: 4rem 2rem;
+    background: #FAFAF8;
+    color: #101010;
+    line-height: 1.6;
+    font-size: 18px;
+}
+
+/* ---- Brand / UI (system sans) ---- */
+.logo {
+    display: block;
+    width: 220px;
+    height: auto;
+    margin-bottom: 3rem;
+}
+.home .logo { width: 240px; }
+
+/* ---- Headings (system sans) ---- */
+h1, h2, h3 {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-weight: 600;
+}
+h1 { font-size: 2rem; line-height: 1.2; letter-spacing: -0.01em; margin-bottom: 0.4rem; }
+h2 { font-size: 1.4rem; line-height: 1.35; margin-top: 2.4rem; margin-bottom: 0.8rem; }
+h3 { font-size: 1.2rem; line-height: 1.4; margin-top: 1.8rem; margin-bottom: 0.6rem; }
+
+/* Blog listing uses a smaller page title than article pages */
+.listing h1 { font-size: 1.6rem; margin-bottom: 2rem; }
+
+/* ---- Article subtitle / standfirst ---- */
+.subtitle {
+    font-size: 1.25rem;
+    line-height: 1.45;
+    color: #555;
+    margin: 0 0 0.7rem;
+}
+
+/* ---- Date / byline ---- */
+.date {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 0.95rem;
+    color: #555;
+    display: block;
+}
+article .date { margin-bottom: 2.2rem; }
+.listing .post .date { margin-top: 0.2rem; }
+
+/* ---- Prose ---- */
+p { margin-bottom: 1.2rem; }
+ul, ol { margin-bottom: 1.2rem; padding-left: 1.5rem; }
+li { margin-bottom: 0.5rem; }
+strong { font-weight: 600; }
+
+a { color: #101010; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.18em; }
+a:hover { color: #555; }
+
+/* ---- Blog listing items ---- */
+.post { margin-bottom: 1.8rem; }
+.post a {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-weight: 600;
+}
+
+/* ---- Code ---- */
+code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-size: 0.9em;
+    background: #F1F0EC;
+    padding: 0.1em 0.3em;
+    border-radius: 3px;
+}
+pre {
+    overflow-x: auto;
+    background: #F1F0EC;
+    padding: 1rem;
+    border-radius: 4px;
+    margin: 1.2rem 0;
+    font-size: 0.9rem;
+}
+pre code { background: none; padding: 0; border-radius: 0; font-size: inherit; }
+
+/* ---- Misc ---- */
+hr {
+    border: 0;
+    border-top: 1px solid #D8D6CF;
+    margin: 3rem 0 2rem;
+}
+.note { color: #555; font-style: italic; }
+.signature { margin-top: 2.5rem; color: #444; }
+
+footer {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display: flex;
+    gap: 1rem;
+    margin-top: 3rem;
+    font-size: 0.95rem;
+}
+
+/* ---- Mobile ---- */
+@media (max-width: 480px) {
+    body { padding: 2.5rem 1.25rem; }
+    h1 { font-size: 1.6rem; }
+    .subtitle { font-size: 1.1rem; }
+}
