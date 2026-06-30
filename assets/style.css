@@ -55,6 +55,17 @@ h3 { font-size: 1.2rem; line-height: 1.4; margin-top: 1.8rem; margin-bottom: 0.6
 article .date { margin-bottom: 2.2rem; }
 .listing .post .date { margin-top: 0.2rem; }
 
+/* ---- Article byline (author + date) ---- */
+.byline {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 0.95rem;
+    color: #555;
+    margin: 0 0 2.2rem;
+}
+.byline .date { display: inline; margin: 0; }
+.byline a { color: #555; }
+.byline a:hover { color: #101010; }
+
 /* ---- Prose ---- */
 p { margin-bottom: 1.2rem; }
 ul, ol { margin-bottom: 1.2rem; padding-left: 1.5rem; }

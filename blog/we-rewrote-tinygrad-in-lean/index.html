@@ -22,13 +22,13 @@
     <article>
         <h1>We Rewrote TinyGrad in Lean 4* (And Yes, It's Faster)</h1>
         <p class="subtitle">A Lean 4 rewrite of a TinyGrad subset — faster in 4 of 5 benchmarks, and up to 3x on some.</p>
-        <span class="date">June 29, 2026</span>
+        <p class="byline">By <a href="https://x.com/hargup13" target="_blank" rel="noopener">Harsh Gupta</a> · <span class="date">June 29, 2026</span></p>
 
         <p class="note">This post was dictated to <a href="https://www.linkedin.com/in/siddhartha-vemuri/" target="_blank" rel="noopener">Sid Vemuri</a> and later turned into a blog post by Gemini 3.5. Sid asked some sharp questions that helped with the framing.</p>
 
         <p>Back in December, we laid out our <a href="../why-lean-4-for-agentic-coding/">core thesis</a> on why we are betting on Lean 4 for agentic programming. We believe software should be fast and bug-free. As part of that mandate, we have been focused on making GPUs go fast, and have been rewriting existing GPU software in Lean 4.</p>
 
-        <p>This research report details our latest experiment: rewriting a subset of TinyGrad, a popular minimalist deep learning framework, in Lean 4. We call our version <strong>TGrad</strong> (hence the asterisk, since it is a specific subset). What started as a learning exercise quickly turned into a major milestone: our Lean 4 rewrite is actually faster than TinyGrad itself — in 4 of 5 benchmarks in our system, and up to 3x faster on some of them.</p>
+        <p>This research report details our latest experiment: rewriting a subset of TinyGrad, a popular minimalist deep learning framework, in Lean 4. We call our version <strong><a href="https://github.com/theoriclabs/t-grad" target="_blank" rel="noopener">TGrad</a></strong> (hence the asterisk, since it is a specific subset). What started as a learning exercise quickly turned into a major milestone: our Lean 4 rewrite is actually faster than TinyGrad itself — in 4 of 5 benchmarks in our system, and up to 3x faster on some of them.</p>
 
         <h2>Why this matters</h2>
 
