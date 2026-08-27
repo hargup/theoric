@@ -1,3 +1,10 @@
+---
+description: Because in Lean 4 your schema, your queries and your migrations can all be types, and the compiler checks all three.
+author: Harsh Gupta
+author_url: https://x.com/hargup13
+date: August 27, 2026
+---
+
 # LeanDB: A strongly typed SQL Frontend
 
 Why?

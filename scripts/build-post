@@ -1,0 +1,118 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+usage() {
+    cat <<'EOF'
+Usage:
+  ./scripts/build-post path/to/post.md
+  ./scripts/build-post --watch path/to/post.md
+
+Converts a Markdown post to index.html in the same directory.
+EOF
+}
+
+watch=false
+source_path=""
+
+while (( $# > 0 )); do
+    case "$1" in
+        --watch)
+            watch=true
+            ;;
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        --*)
+            echo "Unknown option: $1" >&2
+            usage >&2
+            exit 2
+            ;;
+        *)
+            if [[ -n "$source_path" ]]; then
+                echo "Only one Markdown source may be provided." >&2
+                usage >&2
+                exit 2
+            fi
+            source_path="$1"
+            ;;
+    esac
+    shift
+done
+
+if [[ -z "$source_path" ]]; then
+    usage >&2
+    exit 2
+fi
+
+if ! command -v pandoc >/dev/null 2>&1; then
+    echo "pandoc is required. Install it with: brew install pandoc" >&2
+    exit 1
+fi
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+repo_root="$(cd "$script_dir/.." && pwd -P)"
+
+if [[ ! -f "$source_path" ]]; then
+    echo "Markdown source not found: $source_path" >&2
+    exit 1
+fi
+
+source_dir="$(cd "$(dirname "$source_path")" && pwd -P)"
+source_file="$source_dir/$(basename "$source_path")"
+
+case "$source_file" in
+    "$repo_root"/blog/*.md)
+        ;;
+    *)
+        echo "Post must be a Markdown file inside $repo_root/blog." >&2
+        exit 1
+        ;;
+esac
+
+relative_dir="${source_dir#"$repo_root"/}"
+
+if [[ "$relative_dir" == "blog" || "$relative_dir" == "blog/drafts" ]]; then
+    echo "Each Markdown post must live in its own directory so its index.html is unambiguous." >&2
+    exit 1
+fi
+
+canonical_url="https://theoric.com/${relative_dir%/}/"
+output_file="$source_dir/index.html"
+
+build_post() {
+    local temporary_output
+    temporary_output="$(mktemp "$source_dir/.index.html.XXXXXX")"
+
+    if ! pandoc "$source_file" \
+        --from=gfm \
+        --to=html5 \
+        --template="$script_dir/templates/post.html" \
+        --lua-filter="$script_dir/filters/post.lua" \
+        --metadata="canonical=$canonical_url" \
+        --wrap=none \
+        --output="$temporary_output"; then
+        rm -f "$temporary_output"
+        return 1
+    fi
+
+    mv "$temporary_output" "$output_file"
+
+    echo "Built ${output_file#"$repo_root"/}"
+}
+
+build_post
+
+if [[ "$watch" == true ]]; then
+    echo "Watching ${source_file#"$repo_root"/} (press Ctrl-C to stop)"
+    previous_checksum="$(cksum < "$source_file")"
+
+    while sleep 1; do
+        current_checksum="$(cksum < "$source_file")"
+        if [[ "$current_checksum" != "$previous_checksum" ]]; then
+            build_post
+            previous_checksum="$current_checksum"
+        fi
+    done
+fi
