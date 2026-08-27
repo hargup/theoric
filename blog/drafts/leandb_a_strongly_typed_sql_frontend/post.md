@@ -1,5 +1,6 @@
-# A strongly typed SQL frontend can exist
+# LeanDB: A strongly typed SQL Frontend
 
+Why?
 Because in Lean 4 your schema, your queries and your migrations can all be types, and the compiler checks all three.
 
 This post has three jobs. Communicate that a strongly typed SQL frontend can exist. Explain why it might be valuable. Show the first cut so that you can tell me where it is wrong.
