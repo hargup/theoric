@@ -21,9 +21,9 @@
 
     <article>
         <h1>LeanDB: A strongly typed SQL Frontend</h1>
-        <p class="subtitle">At Theoric Labs we believe AgenticAI combined with Formal methods can “solve” software. Essentially, we belive software will be fast, and <a href="https://theoric.com/blog/the-future-of-software-will-be-bug-free/" target="_blank" rel="noopener">bug free</a>.</p>
         <p class="byline">By <a href="https://x.com/hargup13" target="_blank" rel="noopener">Harsh Gupta</a> · <span class="date">September 13, 2026</span></p>
 
+<p>At Theoric Labs we believe AgenticAI combined with Formal methods can “solve” software. Essentially, we belive software will be fast, and <a href="https://theoric.com/blog/the-future-of-software-will-be-bug-free/" target="_blank" rel="noopener">bug free</a>.</p>
 <p>LeanDB is an experiment in applying part of this idea to databases: describe our data and its properties in Lean, while using SQL databases for storage and querying.</p>
 <h2 id="a-primer-on-types-in-lean">A Primer on Types in Lean</h2>
 <p>Types are powerful because they allow us to check properties before the code is run. A function expecting a number should not accidentally receive a string.</p>
@@ -215,7 +215,6 @@ def joined : Row (users ++ orders) :=
 
 #eval joined.col &quot;total&quot;   -- 4200</code></pre>
 <p><code>Row (users ++ orders)</code> is a type that was computed by concatenating two lists. You never wrote the joined schema down. The compiler derived it, and <code>joined.col "total"</code> type-checks against the derived schema.</p>
-<p>Try doing that in an ORM.</p>
 <h2 id="architecture-and-design-philosophy">Architecture and Design Philosophy</h2>
 <p>Lean has an extremely expressive type system. We want to describe the shape of our data in Lean, and use a SQL database as its physical store, for efficient storage and querying.</p>
 <p>For the café, the domain model should be able to say more than:</p>
@@ -254,5 +253,14 @@ def joined : Row (users ++ orders) :=
         <a href="https://x.com/TheoricLabs" target="_blank" rel="noopener">X</a>
         <a href="https://www.linkedin.com/company/theoriclabs/" target="_blank" rel="noopener">LinkedIn</a>
     </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://unpkg.com/highlightjs-lean@1.2.0/dist/lean.min.js"></script>
+    <script>
+        document.querySelectorAll('article pre[class] > code').forEach(function (code) {
+            code.classList.add(code.parentElement.className);
+            hljs.highlightElement(code);
+        });
+    </script>
 </body>
 </html>

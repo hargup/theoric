@@ -3,6 +3,7 @@ description: Because in Lean 4 your schema, your queries and your migrations can
 author: Harsh Gupta
 author_url: https://x.com/hargup13
 date: September 13, 2026
+subtitle: false
 ---
 
 # LeanDB: A strongly typed SQL Frontend
@@ -360,7 +361,6 @@ def joined : Row (users ++ orders) :=
 
 `Row (users ++ orders)` is a type that was computed by concatenating two lists. You never wrote the joined schema down. The compiler derived it, and `joined.col "total"` type-checks against the derived schema.
 
-Try doing that in an ORM.
 
 ## Architecture and Design Philosophy
 

@@ -21,7 +21,9 @@
 
     <article>
         <h1>$title$</h1>
+$if(subtitle)$
         <p class="subtitle">$subtitle$</p>
+$endif$
         <p class="byline">By <a href="$author_url$" target="_blank" rel="noopener">$author$</a> · <span class="date">$date$</span></p>
 
 $body$
@@ -34,5 +36,14 @@ $body$
         <a href="https://x.com/TheoricLabs" target="_blank" rel="noopener">X</a>
         <a href="https://www.linkedin.com/company/theoriclabs/" target="_blank" rel="noopener">LinkedIn</a>
     </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://unpkg.com/highlightjs-lean@1.2.0/dist/lean.min.js"></script>
+    <script>
+        document.querySelectorAll('article pre[class] > code').forEach(function (code) {
+            code.classList.add(code.parentElement.className);
+            hljs.highlightElement(code);
+        });
+    </script>
 </body>
 </html>

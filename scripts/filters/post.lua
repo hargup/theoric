@@ -32,13 +32,22 @@ function Pandoc(doc)
     error("post must begin with a level-one heading")
   end
 
-  local subtitle = doc.blocks[2]
-  if subtitle == nil or subtitle.t ~= "Para" then
-    error("post must include an opening paragraph after its title")
+  local subtitle_disabled = doc.meta.subtitle ~= nil
+    and pandoc.utils.stringify(doc.meta.subtitle) == "false"
+
+  local body_start = 2
+  if not subtitle_disabled then
+    local subtitle = doc.blocks[2]
+    if subtitle == nil or subtitle.t ~= "Para" then
+      error("post must include an opening paragraph after its title, or set `subtitle: false` in its metadata")
+    end
+    doc.meta.subtitle = pandoc.MetaInlines(subtitle_inlines(subtitle.content))
+    body_start = 3
+  else
+    doc.meta.subtitle = nil
   end
 
   doc.meta.title = pandoc.MetaInlines(title.content)
-  doc.meta.subtitle = pandoc.MetaInlines(subtitle_inlines(subtitle.content))
 
   required_metadata(doc.meta, "description")
   required_metadata(doc.meta, "author")
@@ -49,7 +58,7 @@ function Pandoc(doc)
   doc.meta.author_url = pandoc.MetaString(pandoc.utils.stringify(doc.meta.author_url))
 
   local body = {}
-  for index = 3, #doc.blocks do
+  for index = body_start, #doc.blocks do
     table.insert(body, doc.blocks[index])
   end
 

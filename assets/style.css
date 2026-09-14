@@ -7,7 +7,7 @@
 
 body {
     font-family: Charter, "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
-    max-width: 38rem;
+    max-width: 42rem;
     margin: 0 auto;
     padding: 4rem 2rem;
     background: #FAFAF8;
@@ -99,6 +99,22 @@ pre {
     font-size: 0.9rem;
 }
 pre code { background: none; padding: 0; border-radius: 0; font-size: inherit; }
+
+/* ---- Syntax highlighting (highlight.js tokens) ---- */
+.hljs-comment,
+.hljs-quote { color: #8a8a82; font-style: italic; }
+.hljs-keyword,
+.hljs-literal,
+.hljs-selector-tag { color: #b3521e; }
+.hljs-string,
+.hljs-symbol { color: #4b7a3d; }
+.hljs-number { color: #a06b1f; }
+.hljs-title,
+.hljs-type,
+.hljs-class .hljs-title { color: #2f6f9e; }
+.hljs-built_in,
+.hljs-function { color: #7a4fa0; }
+.hljs-sorry { color: #c0392b; font-weight: 600; }
 
 /* ---- Images ---- */
 article img {
