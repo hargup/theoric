@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeanDB: A strongly typed SQL Frontend | Theoric</title>
+    <meta name="description" content="Because in Lean 4 your schema, your queries and your migrations can all be types, and the compiler checks all three.">
+    <link rel="canonical" href="https://theoric.com/blog/leandb_a_strongly_typed_sql_frontend/">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <meta property="og:title" content="LeanDB: A strongly typed SQL Frontend | Theoric">
+    <meta property="og:description" content="Because in Lean 4 your schema, your queries and your migrations can all be types, and the compiler checks all three.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://theoric.com/blog/leandb_a_strongly_typed_sql_frontend/">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="LeanDB: A strongly typed SQL Frontend | Theoric">
+    <meta name="twitter:description" content="Because in Lean 4 your schema, your queries and your migrations can all be types, and the compiler checks all three.">
+    <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+    <a href="/" aria-label="Theoric home"><img class="logo" src="/assets/theoric-stylized-wordmark.svg" alt="Theoric"></a>
+
+    <article>
+        <h1>LeanDB: A strongly typed SQL Frontend</h1>
+        <p class="subtitle">At Theoric Labs we believe AgenticAI combined with Formal methods can “solve” software. Essentially, we belive software will be fast, and <a href="https://theoric.com/blog/the-future-of-software-will-be-bug-free/" target="_blank" rel="noopener">bug free</a>.</p>
+        <p class="byline">By <a href="https://x.com/hargup13" target="_blank" rel="noopener">Harsh Gupta</a> · <span class="date">September 13, 2026</span></p>
+
+<p>LeanDB is an experiment in applying part of this idea to databases: describe our data and its properties in Lean, while using SQL databases for storage and querying.</p>
+<h2 id="a-primer-on-types-in-lean">A Primer on Types in Lean</h2>
+<p>Types are powerful because they allow us to check properties before the code is run. A function expecting a number should not accidentally receive a string.</p>
+<p>Lean takes this much further. We can express properties as propositions, construct proofs of those properties, and have Lean check those proofs. Expressing a property does not mean Lean will automatically prove it, but it gives us a precise statement of what needs to be established.</p>
+<p>Let’s use a café menu as an example. We want to describe the products we sell, their available configurations, and the rules which make an order valid.</p>
+<p>The following examples illustrate the modeling approach, rather than the current feature set of the LeanDB prototype.</p>
+<h2 id="inductive-types">Inductive Types</h2>
+<p>An inductive type describes the ways a value can be constructed. Different cases can contain different information, and a case can contain more values of the same type.</p>
+<p>For our café, we can start with the available temperatures and milks:</p>
+<pre class="lean"><code>inductive Temperature where
+  | hot
+  | iced
+
+inductive Milk where
+  | dairy
+  | oat
+  | almond</code></pre>
+<p>We can then describe our menu:</p>
+<pre class="lean"><code>inductive MenuItem where
+  | latte (temperature : Temperature) (milk : Milk)
+  | pastry (name : String)
+  | bundle (items : List MenuItem)</code></pre>
+<p>A latte has a temperature and a milk choice. A pastry has a name. A bundle contains other menu items:</p>
+<pre class="lean"><code>def breakfast : MenuItem :=
+  .bundle [
+    .latte .hot .oat,
+    .pastry &quot;Croissant&quot;
+  ]</code></pre>
+<p>We don’t need to represent everything as one record with a collection of optional fields. A pastry does not have an irrelevant <code>milk</code> field, and a latte cannot be constructed without a milk choice.</p>
+<p>The <code>bundle</code> case also makes this recursive: a bundle can contain individual items or other bundles. We have described a whole family of possible menu items using a small set of construction rules.</p>
+<h2 id="refinement-types">Refinement Types</h2>
+<p>Sometimes an ordinary type allows more values than our application should accept.</p>
+<p>Suppose our café allows between one and four espresso shots in a latte. A natural number is not enough to describe this: it also allows zero, five, or a million.</p>
+<p>We can refine it:</p>
+<pre class="lean"><code>abbrev ShotCount :=
+  { n : Nat // 0 &lt; n ∧ n ≤ 4 }</code></pre>
+<p>This means: a natural number <code>n</code>, together with a proof that it is greater than zero and at most four. Lean represents this using a <em>subtype</em>.</p>
+<p>A double shot is valid:</p>
+<pre class="lean"><code>def doubleShot : ShotCount :=
+  ⟨2, by decide⟩</code></pre>
+<p>The <code>2</code> is the value. The <code>by decide</code> supplies a proof of the simple arithmetic condition.</p>
+<p>These attempted definitions would be rejected:</p>
+<pre class="lean"><code>-- Rejected: zero does not satisfy the condition.
+-- def noShots : ShotCount := ⟨0, by decide⟩
+
+-- Rejected: five does not satisfy the condition.
+-- def fiveShots : ShotCount := ⟨5, by decide⟩</code></pre>
+<p>Now a function accepting a <code>ShotCount</code> receives not just a number, but a number whose range has been established.</p>
+<p>What about a number coming from a user at runtime? We still have to check it:</p>
+<pre class="lean"><code>def parseShotCount (n : Nat) : Option ShotCount :=
+  if h : 0 &lt; n ∧ n ≤ 4 then
+    some ⟨n, h⟩
+  else
+    none</code></pre>
+<p>The successful branch has evidence that the condition holds, so it can construct a <code>ShotCount</code>. The unsuccessful branch returns <code>none</code>. This is the same general approach used when decoding external data into types with stronger guarantees.</p>
+<p>The point is not to eliminate all runtime validation. It is to make the result of validation explicit, so the rest of the application can use it.</p>
+<h2 id="dependent-types">Dependent Types</h2>
+<p>Sometimes whether one choice is valid depends on another choice.</p>
+<p>Suppose our café serves hot lattes in small, medium, and large cups, but iced lattes only in medium and large cups.</p>
+<p>We could represent temperature and size as two independent fields and check their combination later. Instead, we can make the type of the size depend on the temperature:</p>
+<pre class="lean"><code>inductive CupSize : Temperature → Type where
+  | small : CupSize .hot
+  | medium : {t : Temperature} → CupSize t
+  | large : {t : Temperature} → CupSize t</code></pre>
+<p>Here, <code>CupSize .hot</code> and <code>CupSize .iced</code> are related but different types. The <code>small</code> constructor is only available for the hot version. This is an example of an <em>indexed family</em>: the index determines which constructions are available.</p>
+<p>We can use this in an order:</p>
+<pre class="lean"><code>structure LatteOrder where
+  temperature : Temperature
+  size : CupSize temperature
+  milk : Milk
+  shots : ShotCount</code></pre>
+<p>Notice the field:</p>
+<pre class="lean"><code>size : CupSize temperature</code></pre>
+<p>The type of <code>size</code> depends on the <strong>value</strong> of <code>temperature</code>.</p>
+<p>An iced oat latte with two shots is valid:</p>
+<pre class="lean"><code>def icedOatLatte : LatteOrder :=
+  { temperature := .iced
+    size := .large
+    milk := .oat
+    shots := doubleShot }</code></pre>
+<p>But there is no small iced size in this model:</p>
+<pre class="lean"><code>-- Rejected: .small has type CupSize .hot,
+-- not CupSize .iced.
+-- def smallIced : CupSize .iced := .small</code></pre>
+<p>We have now combined several ideas. The milk must be one of the choices we defined. The number of shots must satisfy a range constraint. The available cup sizes depend on the temperature.</p>
+<p>These are not just comments describing what a valid order should look like. They are part of the type of the order.</p>
+<h2 id="meta-types-data-that-describes-a-type">Meta Types: Data That Describes a Type</h2>
+<p>So far, we have written our menu choices directly in Lean. But what happens when the café wants to define new choices as data?</p>
+<p>Perhaps one product has a milk selector, another has a gift-wrap toggle, and another has a field for a message.</p>
+<p>Lean allows functions to return types. We can use this to define a small language of field descriptions, then interpret those descriptions into actual Lean types. This is commonly called the <em>universe design pattern</em>.</p>
+<pre class="lean"><code>inductive FieldSpec where
+  | text
+  | toggle
+  | choice (options : List String)</code></pre>
+<p>A field can contain text, a Boolean choice, or one of a specified list of strings.</p>
+<p>Now we define what a value of each field looks like:</p>
+<pre class="lean"><code>def FieldSpec.Value : FieldSpec → Type
+  | .text =&gt; String
+  | .toggle =&gt; Bool
+  | .choice options =&gt;
+      { value : String // value ∈ options }</code></pre>
+<p>The important thing here is that <code>FieldSpec.Value</code> returns a <strong>type</strong>, not a string describing a type.</p>
+<p>For a milk selector:</p>
+<pre class="lean"><code>def milkField : FieldSpec :=
+  .choice [&quot;Dairy&quot;, &quot;Oat&quot;, &quot;Almond&quot;]
+
+def selectedMilk : FieldSpec.Value milkField :=
+  ⟨&quot;Oat&quot;, by decide⟩</code></pre>
+<p>The allowed choices are now represented as ordinary data. That data determines the type of a valid selection.</p>
+<p>A different list of choices gives us a different restriction:</p>
+<pre class="lean"><code>def syrupField : FieldSpec :=
+  .choice [&quot;Vanilla&quot;, &quot;Caramel&quot;]
+
+def selectedSyrup : FieldSpec.Value syrupField :=
+  ⟨&quot;Vanilla&quot;, by decide⟩</code></pre>
+<p>This is what I mean here by “meta types”: <strong>data which describes a type</strong>.</p>
+<p>A larger version could describe a whole product configuration, with several fields and rules relating them. The product definition would describe what can be configured, and an interpretation function would determine the type of a valid configuration.</p>
+<p>The examples above use definitions known when the code is checked. A specification loaded from a database would still need to be decoded at runtime, and a submitted value checked against that specification. Dependent types let us preserve the relationship between the specification and the accepted value; they do not make future database contents known at compile time.</p>
+<h2 id="why-do-we-need-a-strongly-typed-database">Why do we need a strongly typed database?</h2>
+<h3 id="if-you-accidentally-try-to-push-bad-data-the-compiler-will-prevent-you-from-doing-so">If you accidentally try to push bad data, the compiler will prevent you from doing so.</h3>
+<p>Wrong type in a column:</p>
+<pre class="lean"><code>def bob : Row users := .cons &quot;bob&quot; (.cons &quot;bob@example.com&quot; (.cons true .nil))  -- does not compile</code></pre>
+<pre><code>error: Application type mismatch: The argument
+  &quot;bob&quot;
+has type
+  String
+but is expected to have type
+  Ty.int.denote</code></pre>
+<p>Missing column:</p>
+<pre class="lean"><code>def carol : Row users := .cons 3 (.cons &quot;carol@example.com&quot; .nil)  -- does not compile</code></pre>
+<pre><code>error: Application type mismatch: The argument
+  Row.nil
+has type
+  Row []
+but is expected to have type
+  Row [(&quot;active&quot;, Ty.bool)]</code></pre>
+<p>Look at that second error. The compiler is telling you exactly which column you forgot.</p>
+<h3 id="if-you-accidentally-miss-a-validation-your-compiler-tells-you">If you accidentally miss a validation, your compiler tells you.</h3>
+<p>Say withdrawing from an account requires that the account has enough balance. Put that requirement into the function's type.</p>
+<pre class="lean"><code>structure Account where
+  id      : Nat
+  balance : Nat
+
+def withdraw (a : Account) (amt : Nat) (_ : amt ≤ a.balance) : Account :=
+  { a with balance := a.balance - amt }</code></pre>
+<p>The third argument is a proof. You cannot call <code>withdraw</code> without one.</p>
+<pre class="lean"><code>def overdraw (a : Account) : Account := withdraw a 1000000  -- does not compile</code></pre>
+<pre><code>error: Type mismatch
+  withdraw a 1000000
+has type
+  1000000 ≤ a.balance → Account
+but is expected to have type
+  Account</code></pre>
+<p>The only way to get the proof is to do the check.</p>
+<pre class="lean"><code>def safeWithdraw (a : Account) (amt : Nat) : Option Account :=
+  if h : amt ≤ a.balance then some (withdraw a amt h) else none</code></pre>
+<p>So the validation is not a thing you remember to do. It is a thing the compiler will not let you forget. This is the exact class of bug that agents introduce: the code works, the tests pass, and the check that used to be there is gone. Here, the check cannot be gone.</p>
+<h3 id="more-important-and-interesting-typed-databases-let-you-express-queries-which-are-just-super-hard-to-express-otherwise">More important, and interesting: typed databases let you express queries which are just super hard to express otherwise.</h3>
+<p>Column access, checked at compile time. First we need a way to say "column <code>n</code> with type <code>t</code> exists in schema <code>s</code>". That is itself a type.</p>
+<pre class="lean"><code>inductive HasCol : Schema → String → Ty → Type where
+  | here  {s : Schema} {n : String} {t : Ty} : HasCol ((n, t) :: s) n t
+  | there {s : Schema} {n n&#39; : String} {t t&#39; : Ty} : HasCol s n t → HasCol ((n&#39;, t&#39;) :: s) n t</code></pre>
+<p>Then a lookup that takes the row and the proof that the column is there.</p>
+<pre class="lean"><code>def Row.get {s : Schema} {n : String} {t : Ty} : Row s → HasCol s n t → t.denote
+  | .cons v _, .here    =&gt; v
+  | .cons _ r, .there h =&gt; r.get h
+
+def Row.col {s : Schema} (r : Row s) (n : String) {t : Ty}
+    (h : HasCol s n t := by repeat constructor) : t.denote :=
+  r.get h</code></pre>
+<p>That <code>by repeat constructor</code> is the compiler searching the schema for the column at compile time. You just write the column name.</p>
+<pre class="lean"><code>#eval alice.col &quot;email&quot;    -- &quot;alice@example.com&quot;
+#eval alice.col &quot;active&quot;   -- true</code></pre>
+<p>Notice the return types. <code>alice.col "email"</code> is a <code>String</code>. <code>alice.col "active"</code> is a <code>Bool</code>. Not a <code>Value</code>, not an <code>Any</code>, not a string you cast later. The type of the result depends on which column you asked for.</p>
+<p>And a typo:</p>
+<pre class="lean"><code>#eval alice.col &quot;emial&quot;  -- does not compile</code></pre>
+<pre><code>error: unsolved goals
+⊢ HasCol [] &quot;emial&quot; ?m.3</code></pre>
+<p>The compiler walked the whole schema, ran out of columns, and stopped you. Your SQL database would have told you at 3am.</p>
+<p>Now joins. The result schema of a join is computed from the input schemas. In the type.</p>
+<pre class="lean"><code>def Row.append {a b : Schema} : Row a → Row b → Row (a ++ b)
+  | .nil,      r =&gt; r
+  | .cons v l, r =&gt; .cons v (l.append r)
+
+abbrev orders : Schema := [(&quot;order_id&quot;, .int), (&quot;total&quot;, .int)]
+
+def joined : Row (users ++ orders) :=
+  alice.append (.cons 17 (.cons 4200 .nil))
+
+#eval joined.col &quot;total&quot;   -- 4200</code></pre>
+<p><code>Row (users ++ orders)</code> is a type that was computed by concatenating two lists. You never wrote the joined schema down. The compiler derived it, and <code>joined.col "total"</code> type-checks against the derived schema.</p>
+<p>Try doing that in an ORM.</p>
+<h2 id="architecture-and-design-philosophy">Architecture and Design Philosophy</h2>
+<p>Lean has an extremely expressive type system. We want to describe the shape of our data in Lean, and use a SQL database as its physical store, for efficient storage and querying.</p>
+<p>For the café, the domain model should be able to say more than:</p>
+<blockquote>
+<p>An order has a temperature column, a size column, and a shots column.</p>
+</blockquote>
+<p>It should be able to say:</p>
+<blockquote>
+<p>An order has a temperature, a size valid for that temperature, and a shot count between one and four.</p>
+</blockquote>
+<p>We want the application to work with the second description, even when the underlying storage uses ordinary database columns.</p>
+<h2 id="typed-queries">Typed Queries</h2>
+<p>We also want to preserve and extend the general shape of SQL queries: <code>select</code>, <code>insert</code>, <code>update</code>, and <code>delete</code>.</p>
+<p>The idea is that queries are typed in Lean and automatically converted to SQL for execution.</p>
+<p>For example, consider a menu table with a name, a price in cents, and an availability flag. A query selecting only names should return strings. A query selecting names and prices should return pairs of names and prices. The result type should follow from the query, rather than being separately declared and kept in sync by hand.</p>
+<p>Similarly, referring to a nonexistent field or supplying a string where a numeric value is required should be rejected when constructing the typed query.</p>
+<p>This needs a defined query language that LeanDB knows how to translate. The goal is not to assume that any arbitrary Lean function can automatically become SQL.</p>
+<h2 id="preserving-the-domain-model">Preserving the Domain Model</h2>
+<p>For writes, we want to accept values which satisfy the domain’s requirements.</p>
+<p>For reads, we need to reconstruct those values from the stored representation. A row containing an iced latte with a small cup must not silently become a valid <code>LatteOrder</code>.</p>
+<p>For example, the shot count stored in a row might be an ordinary integer. Reading that row should include the necessary decoding and validation before producing a <code>ShotCount</code>.</p>
+<p>The same applies to existing databases. We want compatibility so that you can bring your existing SQL database into LeanDB, but existing data must be checked against any stronger properties we introduce.</p>
+<p>This also gives us a concrete distinction between describing the model and implementing the database layer. Defining <code>LatteOrder</code> in Lean does not, by itself, establish that its SQL encoding, decoding, and queries preserve its meaning. That is part of the work LeanDB needs to do.</p>
+<h2 id="architecture-diagram">Architecture Diagram</h2>
+<p><img src="leandb-architecture.png" alt="Architecture diagram" /></p>
+<h2 id="results-and-next-steps">Results and Next Steps</h2>
+<p>The first thing I wanted to see was whether we could actually have even a working prototype of LeanDB. It seems to be the case.</p>
+<p>I would like you to try out <a href="https://github.com/theoriclabs/leandb" target="_blank" rel="noopener">leanDB</a>.</p>
+<p>One thing I want to try from here is using Lean to write frontend and backend applications. This would allow the domain types defined in Lean to be used across the application.</p>
+    </article>
+
+    <footer>
+        <a href="/">Home</a>
+        <a href="/blog/">Blog</a>
+        <a href="mailto:team@theoric.com">Contact</a>
+        <a href="https://x.com/TheoricLabs" target="_blank" rel="noopener">X</a>
+        <a href="https://www.linkedin.com/company/theoriclabs/" target="_blank" rel="noopener">LinkedIn</a>
+    </footer>
+</body>
+</html>
