@@ -38,7 +38,7 @@ The syntax takes a little getting used to. `fun` introduces a function. `#[...]`
 
 *The counter above, running in the browser after three clicks.*
 
-[Try the counter →](https://leanreact-examples.harsh284924.chatgpt.site/counter.html)
+[Try the counter →](/blog/leanreact_introduction/demos/counter.html)
 
 Now let's load something.
 
@@ -65,7 +65,7 @@ LeanReact's `useResource` gives you one state with four possible cases:
 
 *Each state has a place on the screen.*
 
-[Try the loading states →](https://leanreact-examples.harsh284924.chatgpt.site/states.html)
+[Try the loading states →](/blog/leanreact_introduction/demos/states.html)
 
 The data lives inside `success`. You check the state before reading it.
 
@@ -154,7 +154,7 @@ The list also lets you choose how each row looks. A ticket card lets you choose 
 
 *Swap the input for a textarea. The text you've typed stays.*
 
-[Try swapping the editor →](https://leanreact-examples.harsh284924.chatgpt.site/editors.html)
+[Try swapping the editor →](/blog/leanreact_introduction/demos/editors.html)
 
 Lean checks that the pieces fit. Pass a number editor to a text field, and it tells you something is wrong.
 
@@ -172,7 +172,7 @@ So the user can clear the field, see "Give the ticket a title," and keep typing.
 
 *The form keeps the draft and explains what needs fixing.*
 
-[Try the form →](https://leanreact-examples.harsh284924.chatgpt.site/forms.html)
+[Try the form →](/blog/leanreact_introduction/demos/forms.html)
 
 The browser and a Lean backend can use the same title check. Change the length limit in one place, and both agree on it.
 

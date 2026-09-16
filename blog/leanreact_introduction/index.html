@@ -43,7 +43,7 @@ def Counter : Component CounterProps := component fun props =&gt; do
 <p>The syntax takes a little getting used to. <code>fun</code> introduces a function. <code>#[...]</code> holds the button's children. <code>some</code> supplies an optional prop, and <code>pure &lt;|</code> returns the element. <code>"count"</code> names the hook.</p>
 <p><img src="counter.png" alt="The Lean counter code beside its rendered React button, showing Clicks: 3." /></p>
 <p><em>The counter above, running in the browser after three clicks.</em></p>
-<p><a href="https://leanreact-examples.harsh284924.chatgpt.site/counter.html" target="_blank" rel="noopener">Try the counter →</a></p>
+<p><a href="/blog/leanreact_introduction/demos/counter.html">Try the counter →</a></p>
 <p>Now let's load something.</p>
 <h2 id="make-loading-states-hard-to-forget">Make loading states hard to forget</h2>
 <p>Suppose our support team needs a list of open tickets. A common React implementation starts with three fields:</p>
@@ -60,7 +60,7 @@ const [error, setError] = useState&lt;string | null&gt;(null);</code></pre>
 </ul>
 <p><img src="resource-states.png" alt="Four views of the ticket list: idle and loading show a loading message, success shows two tickets, and failure shows an error." /></p>
 <p><em>Each state has a place on the screen.</em></p>
-<p><a href="https://leanreact-examples.harsh284924.chatgpt.site/states.html" target="_blank" rel="noopener">Try the loading states →</a></p>
+<p><a href="/blog/leanreact_introduction/demos/states.html">Try the loading states →</a></p>
 <p>The data lives inside <code>success</code>. You check the state before reading it.</p>
 <p>Here is how we show the ticket titles:</p>
 <pre class="lean"><code>import LeanReact
@@ -118,7 +118,7 @@ def TitleField : Component TitleFieldProps := component fun props =&gt; do
 <p>The list also lets you choose how each row looks. A ticket card lets you choose its footer. You can change either without touching the code that loads or saves tickets.</p>
 <p><img src="editors.png" alt="The title field rendered as a single-line input and a textarea, both keeping the text Fix the login page on mobile." /></p>
 <p><em>Swap the input for a textarea. The text you've typed stays.</em></p>
-<p><a href="https://leanreact-examples.harsh284924.chatgpt.site/editors.html" target="_blank" rel="noopener">Try swapping the editor →</a></p>
+<p><a href="/blog/leanreact_introduction/demos/editors.html">Try swapping the editor →</a></p>
 <p>Lean checks that the pieces fit. Pass a number editor to a text field, and it tells you something is wrong.</p>
 <h2 id="let-people-finish-typing">Let people finish typing</h2>
 <p>Suppose ticket titles must contain between 1 and 200 characters. Someone selects the whole title and presses Backspace before writing a better one.</p>
@@ -127,7 +127,7 @@ def TitleField : Component TitleFieldProps := component fun props =&gt; do
 <p>So the user can clear the field, see "Give the ticket a title," and keep typing. Their input isn't discarded because it failed validation.</p>
 <p><img src="draft-validation.png" alt="The ticket editor after an empty title is submitted. The field stays empty and the form says Give the ticket a title." /></p>
 <p><em>The form keeps the draft and explains what needs fixing.</em></p>
-<p><a href="https://leanreact-examples.harsh284924.chatgpt.site/forms.html" target="_blank" rel="noopener">Try the form →</a></p>
+<p><a href="/blog/leanreact_introduction/demos/forms.html">Try the form →</a></p>
 <p>The browser and a Lean backend can use the same title check. Change the length limit in one place, and both agree on it.</p>
 <p>These checks work together in bigger forms too. Say someone is editing ten tickets at once. You can check every title and description, then show all the errors together. They don't have to fix one field and submit again just to discover the next problem.</p>
 <h2 id="a-few-more-mistakes-the-compiler-catches">A few more mistakes the compiler catches</h2>
