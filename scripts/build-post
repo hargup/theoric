@@ -92,6 +92,7 @@ build_post() {
         --lua-filter="$script_dir/filters/post.lua" \
         --metadata="canonical=$canonical_url" \
         --wrap=none \
+        --syntax-highlighting=none \
         --output="$temporary_output"; then
         rm -f "$temporary_output"
         return 1

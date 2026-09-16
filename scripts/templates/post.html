@@ -41,7 +41,9 @@ $body$
     <script src="https://unpkg.com/highlightjs-lean@1.2.0/dist/lean.min.js"></script>
     <script>
         document.querySelectorAll('article pre[class] > code').forEach(function (code) {
-            code.classList.add(code.parentElement.className);
+            code.parentElement.className.split(/\s+/).forEach(function (cls) {
+                if (cls) code.classList.add(cls);
+            });
             hljs.highlightElement(code);
         });
     </script>
