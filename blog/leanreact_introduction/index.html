@@ -3,128 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LeanReact: Express composable and correct react components in Lean | Theoric</title>
-    <meta name="description" content="LeanReact 0.1: compose React components in Lean, where the compiler checks your hooks, resource states, and forms.">
+    <title>LeanReact: Expressing Composable and Correct React Components in Lean | Theoric</title>
+    <meta name="description" content="LeanReact 0.1: compose React components in Lean, where the compiler checks your checkout states, editors, and forms.">
     <link rel="canonical" href="https://theoric.com/blog/leanreact_introduction/">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-    <meta property="og:title" content="LeanReact: Express composable and correct react components in Lean | Theoric">
-    <meta property="og:description" content="LeanReact 0.1: compose React components in Lean, where the compiler checks your hooks, resource states, and forms.">
+    <meta property="og:title" content="LeanReact: Expressing Composable and Correct React Components in Lean | Theoric">
+    <meta property="og:description" content="LeanReact 0.1: compose React components in Lean, where the compiler checks your checkout states, editors, and forms.">
     <meta property="og:type" content="article">
     <meta property="og:url" content="https://theoric.com/blog/leanreact_introduction/">
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="LeanReact: Express composable and correct react components in Lean | Theoric">
-    <meta name="twitter:description" content="LeanReact 0.1: compose React components in Lean, where the compiler checks your hooks, resource states, and forms.">
+    <meta name="twitter:title" content="LeanReact: Expressing Composable and Correct React Components in Lean | Theoric">
+    <meta name="twitter:description" content="LeanReact 0.1: compose React components in Lean, where the compiler checks your checkout states, editors, and forms.">
     <link rel="stylesheet" href="/assets/style.css">
 </head>
 <body>
     <a href="/" aria-label="Theoric home"><img class="logo" src="/assets/theoric-stylized-wordmark.svg" alt="Theoric"></a>
 
     <article>
-        <h1>LeanReact: Express composable and correct react components in Lean</h1>
+        <h1>LeanReact: Expressing Composable and Correct React Components in Lean</h1>
         <p class="byline">By <a href="https://x.com/hargup13" target="_blank" rel="noopener">Harsh Gupta</a> · <span class="date">September 15, 2026</span></p>
 
 <p>The intention of LeanReact is to be able to specify composable and correct React components in Lean. We talked about <a href="https://theoric.com/blog/leandb_a_strongly_typed_sql_frontend/" target="_blank" rel="noopener">why Lean types are great in the Lean DB post</a>. The same types are also great for expressing frontend components. Today, I want to introduce LeanReact 0.1 and show you its power with some examples.</p>
-<h2 id="start-with-a-button">Start with a button</h2>
-<p>Here is a counter in Lean:</p>
+<p>LeanReact makes it easier to express composable and correct React Components.</p>
+<h2 id="example-1-stop-the-checkout-from-reaching-impossible-states">Example 1: Stop the checkout from reaching impossible states</h2>
+<p>Here is a multi-step checkout the way it usually gets written:</p>
+<pre class="ts"><code>const [currentStep, setCurrentStep] = useState(1); // 1 shipping, 2 payment, 3 review
+const [isSubmitting, setIsSubmitting] = useState(false);
+const [hasError, setHasError] = useState(false);
+const [isPaymentValidated, setIsPaymentValidated] = useState(false);
+const [showDiscountModal, setShowDiscountModal] = useState(false);</code></pre>
+<p>Each <code>useState</code> is a slot that varies on its own. Multiply the options: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>×</mo><mn>2</mn><mo>×</mo><mn>2</mn><mo>×</mo><mn>2</mn><mo>×</mo><mn>2</mn><mo>=</mo><mn>48</mn></mrow><annotation encoding="application/x-tex">3 \times 2 \times 2 \times 2 \times 2 = 48</annotation></semantics></math> states this component can be in. Only 10 out of these 48 states are valid. In real world example, the number possible states are LOT more, and you almost always forget to handle a valid state, and spend unnecessary time handling states which will probably never occur.</p>
+<p>Same state expressed as Lean's inductive types:</p>
 <pre class="lean"><code>import LeanReact
 open LeanReact
 
-structure CounterProps where
-  label : String
+structure Shipping where
+  address : String
 
-def Counter : Component CounterProps := component fun props =&gt; do
-  let count ← useState 0 &quot;count&quot;
-  pure &lt;| DOM.button {
-    onPress := some (count.modify (fun value =&gt; value + 1))
-  } #[
-    text (props.label ++ &quot;: &quot; ++ toString count.value)
-  ]</code></pre>
-<p><code>CounterProps</code> is the props type. <code>useState</code> holds the count. Clicking the button updates it. <code>count.modify</code> works like React's <code>setCount(previous =&gt; previous + 1)</code>.</p>
-<p>The syntax takes a little getting used to. <code>fun</code> introduces a function. <code>#[...]</code> holds the button's children. <code>some</code> supplies an optional prop, and <code>pure &lt;|</code> returns the element. <code>"count"</code> names the hook.</p>
-<p><img src="counter.png" alt="The Lean counter code beside its rendered React button, showing Clicks: 3." /></p>
-<p><em>The counter above, running in the browser after three clicks.</em></p>
-<p><a href="/blog/leanreact_introduction/demos/counter.html">Try the counter →</a></p>
-<p>Now let's load something.</p>
-<h2 id="make-loading-states-hard-to-forget">Make loading states hard to forget</h2>
-<p>Suppose our support team needs a list of open tickets. A common React implementation starts with three fields:</p>
-<pre class="ts"><code>const [data, setData] = useState&lt;Ticket[] | null&gt;(null);
-const [loading, setLoading] = useState(false);
-const [error, setError] = useState&lt;string | null&gt;(null);</code></pre>
-<p>These fields can disagree. A request fails and sets <code>error</code>, but nobody clears <code>loading</code>. Or the page treats <code>data === null</code> as an empty list, even though it hasn't asked the server yet.</p>
-<p>LeanReact's <code>useResource</code> gives you one state with four possible cases:</p>
-<ul>
-<li><code>idle</code>: the request hasn't started.</li>
-<li><code>loading</code>: the request is running.</li>
-<li><code>success</code>: the request returned a value.</li>
-<li><code>failure</code>: the request failed.</li>
-</ul>
-<p><img src="resource-states.png" alt="Four views of the ticket list: idle and loading show a loading message, success shows two tickets, and failure shows an error." /></p>
-<p><em>Each state has a place on the screen.</em></p>
-<p><a href="/blog/leanreact_introduction/demos/states.html">Try the loading states →</a></p>
-<p>The data lives inside <code>success</code>. You check the state before reading it.</p>
-<p>Here is how we show the ticket titles:</p>
-<pre class="lean"><code>import LeanReact
-open LeanReact
+structure Payment where
+  cardLast4 : String
 
-def ticketList (state : ResourceState (Array String) String) : Element :=
-  match state with
-  | .idle =&gt; DOM.p {} #[text &quot;Loading tickets…&quot;]
-  | .loading _ =&gt; DOM.p {} #[text &quot;Loading tickets…&quot;]
-  | .failure _ (.loader message) =&gt;
-      DOM.p { role := some &quot;alert&quot; } #[text message]
-  | .failure _ (.exception _) =&gt;
-      DOM.p { role := some &quot;alert&quot; } #[text &quot;Could not load tickets. Try again.&quot;]
-  | .success _ titles =&gt;
-      if titles.isEmpty then
-        DOM.p {} #[text &quot;No open tickets. You&#39;re all caught up.&quot;]
-      else
-        DOM.ul {} (titles.map fun title =&gt; DOM.li {} #[text title])</code></pre>
-<p><code>match</code> is like a <code>switch</code> that must cover every case. Delete the <code>loading</code> branch and the code won't compile. The request also can't be loading and failed at the same time.</p>
-<p>The <code>_</code> means "we don't need this value here."</p>
-<p>Notice where "No open tickets" appears: inside <code>success</code>. We only say the queue is empty after getting an answer. No more flashing an empty list while the page loads.</p>
-<p>The two failure branches cover errors we expect and unexpected errors. If loading throws an exception, <code>useResource</code> catches it so we can show an error message.</p>
-<p>Write out the cases you care about. A shortcut like <code>_ =&gt; empty</code> can hide a missing screen behind a blank page.</p>
-<p>You can <a href="https://www.typescriptlang.org/docs/handbook/2/narrowing.html#exhaustiveness-checking" target="_blank" rel="noopener">use this pattern in TypeScript</a> too. In LeanReact, it's built into <code>useResource</code>.</p>
-<h3 id="what-about-a-refresh">What about a refresh?</h3>
-<p>The team clicks Reload while looking at ten tickets. We want those tickets to stay on screen while the new list loads.</p>
-<p>The <a href="https://github.com/theoriclabs/lean-react/blob/v0.1/examples/lean/Examples/Tickets/Components.lean" target="_blank" rel="noopener">Tickets example</a> does this by keeping a copy of the last list. It shows those rows with a loading message above them. If the refresh fails, the rows stay.</p>
-<p>It also checks ticket versions. If someone just saved an edit, an older response won't overwrite it.</p>
-<h3 id="what-about-incomplete-data">What about incomplete data?</h3>
-<p>Sometimes the tickets arrive before the names of the people assigned to them. Each request has its own state. You can wait for both, or show the tickets while the names load.</p>
-<p>Some tickets have nobody assigned at all. Lean represents that with <code>Option</code>: either <code>some</code> value or <code>none</code>. The code has to allow for both. That gives you a place to show "Unassigned" instead of trying to read a person who isn't there.</p>
-<h2 id="compose-the-editor-from-smaller-pieces">Compose the editor from smaller pieces</h2>
+inductive Checkout where
+  | shipping (draft : String)
+  | payment (shipping : Shipping) (draft : String)
+  | review (shipping : Shipping) (payment : Payment)
+  | submitting (shipping : Shipping) (payment : Payment)
+  | failed (shipping : Shipping) (payment : Payment) (message : String)</code></pre>
+<p>I think it's much simpler, and only the valid states are representable.</p>
+<h3 id="how-to-render-the-state">How to render the state</h3>
+<p>Rendering is a <code>match</code>, and the match has to cover every case:</p>
+<pre class="lean"><code>def checkoutView (checkout : Checkout) (placeOrder : Action Unit) : Element :=
+  match checkout with
+  | .shipping draft =&gt;
+      DOM.p {} #[text (&quot;Shipping address: &quot; ++ draft)]
+  | .payment _ draft =&gt;
+      DOM.p {} #[text (&quot;Card number: &quot; ++ draft)]
+  | .review _ payment =&gt;
+      DOM.button { onPress := some placeOrder }
+        #[text (&quot;Place order with card ending &quot; ++ payment.cardLast4)]
+  | .submitting _ _ =&gt;
+      DOM.p { role := some &quot;status&quot; } #[text &quot;Placing your order…&quot;]
+  | .failed _ _ message =&gt;
+      DOM.p { role := some &quot;alert&quot; } #[text message]</code></pre>
+<p>The spinner text lives in exactly one branch, and that branch only runs when the state is <code>submitting</code>. Delete the <code>.submitting</code> arm and the compiler answers <code>Missing cases: Checkout.submitting …</code>. Compare that to the React version, where a spinner is <code>{isSubmitting &amp;&amp; &lt;Spinner /&gt;}</code> placed somewhere in the tree, and nothing checks whether the form underneath it is one you should be spinning over.</p>
+<p>You can write this union in TypeScript too, and you should. The difference here is that there is no <code>as</code>, no <code>!</code>, and no <code>any</code> to slip past the match, and the same <code>Checkout</code> type can be handed to a Lean backend that decides whether the order is placeable.</p>
+<h2 id="example-2-compose-the-editor-from-smaller-pieces">Example 2: Compose the editor from smaller pieces</h2>
 <p>Now the support team wants two ways to edit a ticket: a quick editor beside the list and a larger editor on the detail page.</p>
 <p>Both need the same title validation and save behavior. Copying the whole editor would give us two places to fix every bug.</p>
-<p>You can pass one component into another as a prop. Here is a title field that lets us choose which input to use:</p>
+<p>You can pass one component into another as a prop. In React, you define the contract yourself:</p>
+<pre class="tsx"><code>type EditorProps = { value: string; onChange: (value: string) =&gt; void };
+
+function TitleInput({ value, onChange }: EditorProps) {
+  return &lt;input aria-label=&quot;Ticket title&quot; value={value} onChange={(e) =&gt; onChange(e.target.value)} /&gt;;
+}
+
+function TitleTextarea({ value, onChange }: EditorProps) {
+  return &lt;textarea aria-label=&quot;Ticket title&quot; value={value} onChange={(e) =&gt; onChange(e.target.value)} /&gt;;
+}
+
+function TitleField({ Editor }: { Editor: ComponentType&lt;EditorProps&gt; }) {
+  const [draft, setDraft] = useState(&quot;Fix the login page&quot;);
+  return &lt;Editor value={draft} onChange={setDraft} /&gt;;
+}
+
+&lt;TitleField Editor={TitleInput} /&gt;
+&lt;TitleField Editor={TitleTextarea} /&gt;</code></pre>
+<p>Same thing in LeanReact:</p>
 <pre class="lean"><code>import LeanReact
 import LeanReact.Forms
 open LeanReact
 
 def TitleInput : Editor String := component fun field =&gt;
   pure &lt;| DOM.input {
-    value := some field.value
     ariaLabel := some &quot;Ticket title&quot;
+    value := some field.value
     onChange := some (fun event =&gt; field.set event.value)
   }
 
-structure TitleFieldProps where
-  editor : Editor String := TitleInput
+def TitleTextarea : Editor String := component fun field =&gt;
+  pure &lt;| node &quot;textarea&quot; #[
+    .string &quot;aria-label&quot; &quot;Ticket title&quot;,
+    .string &quot;value&quot; field.value,
+    .change (fun event =&gt; field.set event.value)
+  ] #[]
 
-def TitleField : Component TitleFieldProps := component fun props =&gt; do
+def TitleField : Component (Editor String) := component fun editor =&gt; do
   let draft ← useState &quot;Fix the login page&quot; &quot;title&quot;
-  pure &lt;| element props.editor (FieldBinding.ofState draft)</code></pre>
-<p>An <code>Editor String</code> receives the text and a way to change it. <code>TitleField</code> keeps the draft. The editor displays it. Swap the input for a textarea, and the parent still keeps the text you've typed.</p>
-<p>In the full Tickets example, a <code>useTicketEditor</code> hook checks the title, saves changes, and shows messages. The sidebar and detail page both use it. Fix the save code once, and both get the fix.</p>
-<p>The list also lets you choose how each row looks. A ticket card lets you choose its footer. You can change either without touching the code that loads or saves tickets.</p>
+  pure &lt;| element editor (FieldBinding.ofState draft)
+
+def quickEditor : Element := element TitleField TitleInput
+def detailEditor : Element := element TitleField TitleTextarea</code></pre>
+<p>The two versions are the same length and the same shape. The contrast is in what you had to invent:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>React</th>
+<th>LeanReact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The editor contract</td>
+<td><code>EditorProps</code>, written by you. The next team writes <code>onValueChange</code>, the library you import gives you the raw event.</td>
+<td><code>Editor String</code> is built in. Every editor in the codebase receives the same <code>FieldBinding</code>.</td>
+</tr>
+<tr>
+<td>What <code>onChange</code> hands you</td>
+<td>A DOM event. <code>e.target.value</code> for an input, a different event type for a textarea, something else for a date picker.</td>
+<td>A snapshot with <code>.value</code>. Input and textarea are interchangeable without an adapter.</td>
+</tr>
+<tr>
+<td>Where the draft lives</td>
+<td>In <code>TitleField</code>, because you lifted it. Put it in the editor instead and swapping editors loses the text.</td>
+<td>An <code>Editor</code> receives a binding; it has no slot for its own draft. The parent owns it by construction.</td>
+</tr>
+<tr>
+<td>Updating from the previous value</td>
+<td><code>setDraft(d =&gt; d + "!")</code></td>
+<td><code>field.modify (· ++ "!")</code>, plus <code>field.focus</code> for editing one field of a record while keeping its siblings.</td>
+</tr>
+</tbody>
+</table>
+<p>Pass a number editor where a text editor is expected and both compilers complain. That part is even. What LeanReact adds is one contract for every editor, so the swap in the screenshot below needs no glue.</p>
 <p><img src="editors.png" alt="The title field rendered as a single-line input and a textarea, both keeping the text Fix the login page on mobile." /></p>
 <p><em>Swap the input for a textarea. The text you've typed stays.</em></p>
 <p><a href="/blog/leanreact_introduction/demos/editors.html">Try swapping the editor →</a></p>
-<p>Lean checks that the pieces fit. Pass a number editor to a text field, and it tells you something is wrong.</p>
 <h2 id="let-people-finish-typing">Let people finish typing</h2>
 <p>Suppose ticket titles must contain between 1 and 200 characters. Someone selects the whole title and presses Backspace before writing a better one.</p>
 <p>The empty field is invalid as a saved title. It is perfectly normal as a draft.</p>
 <p>LeanReact keeps what the person typed, even when it isn't a valid title yet. A <code>DraftParser</code> checks the text. <code>Form.submit</code> only passes it to the save function when those checks pass.</p>
-<p>So the user can clear the field, see "Give the ticket a title," and keep typing. Their input isn't discarded because it failed validation.</p>
+<p>So the user can clear the field, see “Give the ticket a title,” and keep typing. Their input isn't discarded because it failed validation.</p>
 <p><img src="draft-validation.png" alt="The ticket editor after an empty title is submitted. The field stays empty and the form says Give the ticket a title." /></p>
 <p><em>The form keeps the draft and explains what needs fixing.</em></p>
 <p><a href="/blog/leanreact_introduction/demos/forms.html">Try the form →</a></p>
@@ -135,14 +164,14 @@ def TitleField : Component TitleFieldProps := component fun props =&gt; do
 <p>Hooks get checked too. If an <code>if</code> statement makes a hook run only on some renders, the build fails. Put that part of the screen in a child component instead.</p>
 <p>LeanReact won't catch every bug. You can still get an effect wrong or break the layout. Keep testing the app and trying it in a browser.</p>
 <h2 id="try-it">Try it</h2>
-<p>LeanReact 0.1 is an early release. Some Lean features aren't supported yet, and using other React libraries takes extra setup. See the <a href="https://github.com/theoriclabs/lean-react/blob/v0.1/docs/IMPLEMENTED.md" target="_blank" rel="noopener">implementation guide</a> for what's available today.</p>
+<p>LeanReact 0.1 is an early release. Some Lean features aren't supported yet, and using other React libraries takes extra setup. See the <a href="https://github.com/theoriclabs/lean-react/blob/main/docs/IMPLEMENTED.md" target="_blank" rel="noopener">implementation guide</a> for what's available today.</p>
 <p>With Git, Node 22.13 or newer, and <a href="https://github.com/leanprover/elan#installation" target="_blank" rel="noopener">elan</a> installed, run:</p>
 <pre class="sh"><code>git clone --branch v0.1 https://github.com/theoriclabs/lean-react.git
 cd lean-react
 npm ci
 npm run dev</code></pre>
 <p>Open <strong>http://localhost:4173</strong>. The examples run in browser memory, so you can try the ticket workspace without setting up a server.</p>
-<p>Start with the counter. Then swap the ticket editor, or remove a branch from a resource match and read the compiler's response. The <a href="https://github.com/theoriclabs/lean-react/blob/v0.1/docs/HOW_TO.md" target="_blank" rel="noopener">how-to guide</a> walks through building your own form.</p>
+<p>Start with the checkout type. Then swap the ticket editor, or remove a branch from the checkout match and read the compiler's response. The <a href="https://github.com/theoriclabs/lean-react/blob/main/docs/HOW_TO.md" target="_blank" rel="noopener">how-to guide</a> walks through building your own form.</p>
     </article>
 
     <footer>

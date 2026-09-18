@@ -26,6 +26,56 @@ function Link(link)
   return link
 end
 
+-- GFM treats \(...\) as escaped parentheses, so leftover TeX like
+-- (3 \times 2 = 48) is recovered as inline math here.
+function Inlines(inlines)
+  local result = {}
+  local index = 1
+
+  while index <= #inlines do
+    local start = inlines[index]
+    local stop = nil
+    local has_times = false
+
+    if start.t == "Str" and start.text:match("^%(") then
+      for look = index, #inlines do
+        local item = inlines[look]
+        if item.t == "Str" then
+          if item.text:find("\\times", 1, true) then
+            has_times = true
+          end
+          if item.text:match("%)$") then
+            stop = look
+            break
+          end
+        elseif item.t ~= "Space" then
+          break
+        end
+      end
+    end
+
+    if stop and has_times then
+      local tex = {}
+      for look = index, stop do
+        local item = inlines[look]
+        if item.t == "Space" then
+          table.insert(tex, " ")
+        else
+          table.insert(tex, item.text)
+        end
+      end
+      local math = table.concat(tex):gsub("^%(", ""):gsub("%)$", "")
+      table.insert(result, pandoc.Math("InlineMath", math))
+      index = stop + 1
+    else
+      table.insert(result, inlines[index])
+      index = index + 1
+    end
+  end
+
+  return result
+end
+
 function Pandoc(doc)
   local title = doc.blocks[1]
   if title == nil or title.t ~= "Header" or title.level ~= 1 then
