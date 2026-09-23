@@ -11,9 +11,9 @@ date: September 23, 2026
 
 Over the past few days I released a handful of tools for the Lean ecosystem:
 
-- **LeanReact**, for UIs;
-- **LeanDB**, a typed database;
-- **LeanHttp**, an HTTP client, two days ago.
+- **[LeanReact](/blog/leanreact_introduction/)**, for UIs;
+- **[LeanDB](/blog/leandb_a_strongly_typed_sql_frontend/)**, a typed database;
+- **[LeanHTTP](/blog/leanhttp/)**, an HTTP client.
 
 This is the next one: **LeanAPI**, a backend framework in the spirit of FastAPI and Express.
 

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeanHTTP: A HTTP Client for Lean 4 | Theoric</title>
+    <meta name="description" content="Introducing leanhttp, an HTTP client for Lean 4 and part of a larger toolset for writing software in Lean.">
+    <link rel="canonical" href="https://theoric.com/blog/leanhttp/">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <meta property="og:title" content="LeanHTTP: A HTTP Client for Lean 4 | Theoric">
+    <meta property="og:description" content="Introducing leanhttp, an HTTP client for Lean 4 and part of a larger toolset for writing software in Lean.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://theoric.com/blog/leanhttp/">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="LeanHTTP: A HTTP Client for Lean 4 | Theoric">
+    <meta name="twitter:description" content="Introducing leanhttp, an HTTP client for Lean 4 and part of a larger toolset for writing software in Lean.">
+    <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+    <a href="/" aria-label="Theoric home"><img class="logo" src="/assets/theoric-stylized-wordmark.svg" alt="Theoric"></a>
+
+    <article>
+        <h1>LeanHTTP: A HTTP Client for Lean 4</h1>
+        <p class="byline">By <a href="https://x.com/hargup13" target="_blank" rel="noopener">Harsh Gupta</a> · <span class="date">September 21, 2026</span></p>
+
+<p>Introducing leanhttp, a HTTP client for Lean 4.</p>
+<p>GitHub: <a href="https://github.com/theoriclabs/leanhttp" target="_blank" rel="noopener">https://github.com/theoriclabs/leanhttp</a></p>
+<p>This is part of a larger toolset I've been building around writing general purpose software in Lean:</p>
+<ul>
+<li><a href="/blog/leanreact_introduction/">LeanReact</a> for UIs</li>
+<li><a href="/blog/leandb_a_strongly_typed_sql_frontend/">LeanDB</a> for database interactions</li>
+<li>Lean’s existing HTTP server support</li>
+<li>now, <a href="https://github.com/theoriclabs/leanhttp" target="_blank" rel="noopener">leanhttp</a> for outbound HTTP/HTTPS requests</li>
+</ul>
+<p>Writing an application in Lean does not automatically make the application correct or formally verified. The hard part is preserving the semantics across boundaries.</p>
+<p>In the next few posts, I’ll show how to do that.</p>
+    </article>
+
+    <footer>
+        <a href="/">Home</a>
+        <a href="/blog/">Blog</a>
+        <a href="mailto:team@theoric.com">Contact</a>
+        <a href="https://x.com/TheoricLabs" target="_blank" rel="noopener">X</a>
+        <a href="https://www.linkedin.com/company/theoriclabs/" target="_blank" rel="noopener">LinkedIn</a>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://unpkg.com/highlightjs-lean@1.2.0/dist/lean.min.js"></script>
+    <script>
+        document.querySelectorAll('article pre[class] > code').forEach(function (code) {
+            code.parentElement.className.split(/\s+/).forEach(function (cls) {
+                if (cls) code.classList.add(cls);
+            });
+            hljs.highlightElement(code);
+        });
+    </script>
+</body>
+</html>
