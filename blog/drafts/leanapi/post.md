@@ -3,6 +3,7 @@ description: "LeanAPI is a backend framework for Lean 4 that lets you prove prop
 author: Harsh Gupta
 author_url: https://x.com/hargup13
 date: September 23, 2026
+draft: true
 ---
 
 # LeanAPI
