@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeanAPI: An API server for Lean 4 | Theoric</title>
+    <meta name="description" content="Introducing LeanAPI v0.1, an API server for Lean 4 in the spirit of Express and FastAPI.">
+    <link rel="canonical" href="https://theoric.com/blog/leanapi/">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <meta property="og:title" content="LeanAPI: An API server for Lean 4 | Theoric">
+    <meta property="og:description" content="Introducing LeanAPI v0.1, an API server for Lean 4 in the spirit of Express and FastAPI.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://theoric.com/blog/leanapi/">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="LeanAPI: An API server for Lean 4 | Theoric">
+    <meta name="twitter:description" content="Introducing LeanAPI v0.1, an API server for Lean 4 in the spirit of Express and FastAPI.">
+    <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+    <a href="/" aria-label="Theoric home"><img class="logo" src="/assets/theoric-stylized-wordmark.svg" alt="Theoric"></a>
+
+    <article>
+        <h1>LeanAPI: An API server for Lean 4</h1>
+        <p class="byline">By <a href="https://x.com/hargup13" target="_blank" rel="noopener">Harsh Gupta</a> · <span class="date">September 28, 2026</span></p>
+
+<p>Introducing LeanAPI v0.1, an api server for your applications written in Lean 4. Think of it as Express/FastAPI equivalent. Includes all the usual stuff, routing, middlewares, auth and headers.</p>
+<p><img src="image.png" alt="Diagram of LeanAPI: typed Lean routes pass through route matching, request parsing and validation, handler execution, and typed serialization, then out as a server, JSON responses, status codes, and web APIs." /></p>
+<p>Enjoy!</p>
+<p>GitHub: <a href="https://github.com/theoriclabs/leanapi" target="_blank" rel="noopener">https://github.com/theoriclabs/leanapi</a></p>
+    </article>
+
+    <footer>
+        <a href="/">Home</a>
+        <a href="/blog/">Blog</a>
+        <a href="mailto:team@theoric.com">Contact</a>
+        <a href="https://x.com/TheoricLabs" target="_blank" rel="noopener">X</a>
+        <a href="https://www.linkedin.com/company/theoriclabs/" target="_blank" rel="noopener">LinkedIn</a>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://unpkg.com/highlightjs-lean@1.2.0/dist/lean.min.js"></script>
+    <script>
+        document.querySelectorAll('article pre[class] > code').forEach(function (code) {
+            code.parentElement.className.split(/\s+/).forEach(function (cls) {
+                if (cls) code.classList.add(cls);
+            });
+            hljs.highlightElement(code);
+        });
+    </script>
+</body>
+</html>
