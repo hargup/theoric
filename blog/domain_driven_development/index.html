@@ -25,8 +25,9 @@
 
 <p>Domain driven development is defining a program purely in the language of its domain, and letting the compiler derive the execution details from it. I'm taking tic-tac-toe as the example because it is small and easy to follow. The post is built on top of libraries, like LeanAPI and LeanDB which I had released earlier.</p>
 <p>The main thing to take away is that theorem-proving languages like Lean let you define the domain abstractly and precisely. In pretty much every other language, you end up mixing the what and the how.</p>
+<p><img src="domain_driven_development_in_lean.png" alt="Diagram of domain-driven development in Lean: a tic-tac-toe domain of player, square, move, and status sits in the center, with ValidMove accepting or rejecting a move, and the API and database derived from that domain." /></p>
 <h2 id="a-domain-is-a-vocabulary-and-its-rules">A domain is a vocabulary and its rules</h2>
-<p>A domain is defined by its grammar: a vocabulary (a set of words with meeanings), and the rules of how those words combine. In tic-tac-toe we have:</p>
+<p>A domain is defined by its grammar: a vocabulary (a set of words with meanings), and the rules of how those words combine. In tic-tac-toe we have:</p>
 <ul>
 <li>Players, of two kinds: X and O.</li>
 <li>A board, which is a grid of nine squares. Each square is empty, or has an X or an O on it.</li>
@@ -55,7 +56,7 @@ structure Move where
   | xToMove | oToMove       -- still going
   | xWon | oWon | draw      -- over
   deriving DecidableEq, Repr</code></pre>
-<p>The board is defined by list of, valid, moved made so far, in order:</p>
+<p>The board is defined by list of, valid, moves made so far, in order:</p>
 <pre class="lean"><code>/-- The marks on the board, in the order they were made. -/
 structure Board where
   private mk ::
@@ -105,7 +106,7 @@ abbrev Board.ValidMove (board : Board) (move : Move) : Prop :=
 /-- The only way to put a mark on a board. -/
 def Board.play (board : Board) (move : Move) (_ : board.ValidMove move) : Board :=
   ⟨board.moves ++ [move]⟩</code></pre>
-<p><code>(_ : board.ValidMove move)</code> that you are seeing above in Board.play is unique to lean, it's a "Proposition" on the move, and the compiler won't execute the function Board.play if move is not valid. And there is no way for the game to in an illegal state.</p>
+<p><code>(_ : board.ValidMove move)</code> that you are seeing above in Board.play is unique to Lean, it's a "Proposition" on the move, and the compiler won't execute the function Board.play if move is not valid. And there is no way for the game to in an illegal state.</p>
 <h2 id="playing-over-the-network">Playing over the network</h2>
 <p>Now we have defined the game, but you can't really play it yet. For that, other parties need to be able to reach it. Let's put a REST API in front of it with <a href="https://github.com/theoriclabs/leanapi" target="_blank" rel="noopener">LeanAPI</a>, and keep the games in a database with <a href="/blog/leandb_a_strongly_typed_sql_frontend/">LeanDB</a>.</p>
 <p>Using REST semantics:</p>
@@ -244,7 +245,7 @@ X-Leanapp-Error: storage.corrupt
 <h2 id="conclusion">Conclusion</h2>
 <p>Hopefully, I was able to illustrate <em>some</em> of how domain driven development works. The primary aim is to keep the domain model the center of the application, when we want to add new rules or things in the domain, the logic across application boundaries like DB, API etc automatically carries.</p>
 <p>I have deliberately chosen a simple example with only two boundaries, the API server, and database so that the example can be followed.</p>
-<p>In real applications, there are many many boundaries and your datamodel needs to carry across. In the next posts, I hope to show can we create a full stack application in domain driven way.</p>
+<p>In real applications, there are many many boundaries and your data model needs to carry across. Naturally domain driven development can be extended to all other application interfaces. For example, the React Components, localstorage in frontend, backend DB, Kafka, and probably all microservices sharing the datamodel. I believe domain driven development can massively simplify the codebases, and eliminate large classes of errors which occur because the understanding of the domain between various parts of the application and services drift.</p>
 <p>GitHub: <a href="https://github.com/theoriclabs/tictactoe/" target="_blank" rel="noopener">https://github.com/theoriclabs/tictactoe/</a></p>
     </article>
 

@@ -12,9 +12,11 @@ Domain driven development is defining a program purely in the language of its do
 
 The main thing to take away is that theorem-proving languages like Lean let you define the domain abstractly and precisely. In pretty much every other language, you end up mixing the what and the how.
 
+![Diagram of domain-driven development in Lean: a tic-tac-toe domain of player, square, move, and status sits in the center, with ValidMove accepting or rejecting a move, and the API and database derived from that domain.](domain_driven_development_in_lean.png)
+
 ## A domain is a vocabulary and its rules
 
-A domain is defined by its grammar: a vocabulary (a set of words with meeanings), and the rules of how those words combine. In tic-tac-toe we have:
+A domain is defined by its grammar: a vocabulary (a set of words with meanings), and the rules of how those words combine. In tic-tac-toe we have:
 
 - Players, of two kinds: X and O.
 - A board, which is a grid of nine squares. Each square is empty, or has an X or an O on it.
@@ -52,7 +54,7 @@ inductive Status where
   deriving DecidableEq, Repr
 ```
 
-The board is defined by list of, valid, moved made so far, in order:
+The board is defined by list of, valid, moves made so far, in order:
 
 ```lean
 /-- The marks on the board, in the order they were made. -/
@@ -113,7 +115,7 @@ abbrev Board.ValidMove (board : Board) (move : Move) : Prop :=
 def Board.play (board : Board) (move : Move) (_ : board.ValidMove move) : Board :=
   ⟨board.moves ++ [move]⟩
 ```
-`(_ : board.ValidMove move)` that you are seeing above in Board.play is unique to lean, it's a "Proposition" on the move, and the compiler won't execute the function Board.play if move is not valid. And there is no way for the game to in an illegal state.
+`(_ : board.ValidMove move)` that you are seeing above in Board.play is unique to Lean, it's a "Proposition" on the move, and the compiler won't execute the function Board.play if move is not valid. And there is no way for the game to in an illegal state.
 
 
 ## Playing over the network
@@ -317,6 +319,6 @@ Hopefully, I was able to illustrate _some_ of how domain driven development work
 
 I have deliberately chosen a simple example with only two boundaries, the API server, and database so that the example can be followed. 
 
-In real applications, there are many many boundaries and your datamodel needs to carry across. In the next posts, I hope to show can we create a full stack application in domain driven way.
+In real applications, there are many many boundaries and your data model needs to carry across. Naturally domain driven development can be extended to all other application interfaces. For example, the React Components, localstorage in frontend, backend DB, Kafka, and probably all microservices sharing the datamodel. I believe domain driven development can massively simplify the codebases, and eliminate large classes of errors which occur because the understanding of the domain between various parts of the application and services drift.
 
 GitHub: <https://github.com/theoriclabs/tictactoe/>
