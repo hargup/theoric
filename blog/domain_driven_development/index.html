@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Introduction to Domain-driven development in Lean: Tic-Tac-Toe | Theoric</title>
+    <meta name="description" content="Tic-tac-toe in Lean: define the domain, and let LeanDB and LeanAPI derive the database and the REST API from it.">
+    <link rel="canonical" href="https://theoric.com/blog/domain_driven_development/">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <meta property="og:title" content="Introduction to Domain-driven development in Lean: Tic-Tac-Toe | Theoric">
+    <meta property="og:description" content="Tic-tac-toe in Lean: define the domain, and let LeanDB and LeanAPI derive the database and the REST API from it.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://theoric.com/blog/domain_driven_development/">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Introduction to Domain-driven development in Lean: Tic-Tac-Toe | Theoric">
+    <meta name="twitter:description" content="Tic-tac-toe in Lean: define the domain, and let LeanDB and LeanAPI derive the database and the REST API from it.">
+    <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+    <a href="/" aria-label="Theoric home"><img class="logo" src="/assets/theoric-stylized-wordmark.svg" alt="Theoric"></a>
+
+    <article>
+        <h1>Introduction to Domain-driven development in Lean: Tic-Tac-Toe</h1>
+        <p class="byline">By <a href="https://x.com/hargup13" target="_blank" rel="noopener">Harsh Gupta</a> · <span class="date">October 5, 2026</span></p>
+
+<p>Domain driven development is defining a program purely in the language of its domain, and letting the compiler derive the execution details from it. I'm taking tic-tac-toe as the example because it is small and easy to follow. The post is built on top of libraries, like LeanAPI and LeanDB which I had released earlier.</p>
+<p>The main thing to take away is that theorem-proving languages like Lean let you define the domain abstractly and precisely. In pretty much every other language, you end up mixing the what and the how.</p>
+<h2 id="a-domain-is-a-vocabulary-and-its-rules">A domain is a vocabulary and its rules</h2>
+<p>A domain is defined by its grammar: a vocabulary (a set of words with meeanings), and the rules of how those words combine. In tic-tac-toe we have:</p>
+<ul>
+<li>Players, of two kinds: X and O.</li>
+<li>A board, which is a grid of nine squares. Each square is empty, or has an X or an O on it.</li>
+<li>A move: a player and a square.</li>
+<li>A game's status: still going with someone to move, or over with a winner or a draw.</li>
+</ul>
+<p>In Lean:</p>
+<pre class="lean"><code>inductive Player where
+  | x
+  | o
+  deriving DecidableEq, Repr
+
+/-- The nine squares of the board. -/
+inductive Square where
+  | topLeft    | top    | topRight
+  | left       | center | right
+  | bottomLeft | bottom | bottomRight
+  deriving DecidableEq, Repr
+
+structure Move where
+  player : Player
+  square : Square
+  deriving DecidableEq, Repr</code></pre>
+<p>A game is in one of five states:</p>
+<pre class="lean"><code>inductive Status where
+  | xToMove | oToMove       -- still going
+  | xWon | oWon | draw      -- over
+  deriving DecidableEq, Repr</code></pre>
+<p>The board is defined by list of, valid, moved made so far, in order:</p>
+<pre class="lean"><code>/-- The marks on the board, in the order they were made. -/
+structure Board where
+  private mk ::
+  moves : List Move
+
+def Board.empty : Board := ⟨[]⟩
+
+/-- Who has marked a square, if anyone. -/
+def Board.mark (board : Board) (square : Square) : Option Player :=
+  (board.moves.find? (·.square == square)).map (·.player)</code></pre>
+<p><code>Option Player</code> is the three states of a square: <code>none</code> is empty, <code>some .x</code> and <code>some .o</code> are the marks.</p>
+<p>Whose turn it is and who won are not stored anywhere. They're computed from the board:</p>
+<pre class="lean"><code>/-- The eight ways to win: three rows, three columns, two diagonals. -/
+def lines : List (List Square) := [
+  [.topLeft, .top, .topRight], [.left, .center, .right], [.bottomLeft, .bottom, .bottomRight],
+  [.topLeft, .left, .bottomLeft], [.top, .center, .bottom], [.topRight, .right, .bottomRight],
+  [.topLeft, .center, .bottomRight], [.topRight, .center, .bottomLeft]
+]
+
+def Board.winner (board : Board) : Option Player :=
+  [Player.x, .o].find? fun p =&gt; lines.any fun line =&gt; line.all (board.mark · == some p)
+
+def Board.status (board : Board) : Status :=
+  match board.winner with
+  | some .x =&gt; .xWon
+  | some .o =&gt; .oWon
+  | none =&gt;
+    if board.moves.length = 9 then .draw
+    else if board.moves.length % 2 = 0 then .xToMove
+    else .oToMove</code></pre>
+<h2 id="the-rules">The rules</h2>
+<p>A Move is valid if:</p>
+<ul>
+<li>the game is in progress.</li>
+<li>and the square is empty.</li>
+<li>it's the mover's turn</li>
+</ul>
+<pre class="lean"><code>/-- The status in which it&#39;s this player&#39;s move. -/
+def Player.toMove : Player → Status
+  | .x =&gt; .xToMove
+  | .o =&gt; .oToMove
+
+/-- A move is valid when it&#39;s the mover&#39;s turn (so the game isn&#39;t over) and the square is empty. -/
+abbrev Board.ValidMove (board : Board) (move : Move) : Prop :=
+  board.status = move.player.toMove ∧ board.mark move.square = none
+
+/-- The only way to put a mark on a board. -/
+def Board.play (board : Board) (move : Move) (_ : board.ValidMove move) : Board :=
+  ⟨board.moves ++ [move]⟩</code></pre>
+<p><code>(_ : board.ValidMove move)</code> that you are seeing above in Board.play is unique to lean, it's a "Proposition" on the move, and the compiler won't execute the function Board.play if move is not valid. And there is no way for the game to in an illegal state.</p>
+<h2 id="playing-over-the-network">Playing over the network</h2>
+<p>Now we have defined the game, but you can't really play it yet. For that, other parties need to be able to reach it. Let's put a REST API in front of it with <a href="https://github.com/theoriclabs/leanapi" target="_blank" rel="noopener">LeanAPI</a>, and keep the games in a database with <a href="/blog/leandb_a_strongly_typed_sql_frontend/">LeanDB</a>.</p>
+<p>Using REST semantics:</p>
+<ul>
+<li><code>POST /games</code> starts a game, and returns its id.</li>
+<li><code>POST /games/:game/moves</code> makes a move. The body is a player and a square.</li>
+<li><code>GET /games/:game</code> shows the board and the status.</li>
+</ul>
+<p>There's no <code>PUT</code> and no <code>DELETE</code>. The domain has no way to edit a game or take back a move, so there's nothing for them to do.</p>
+<h3 id="whats-stored">What's stored</h3>
+<p>A game is a board, so that's what the database stores:</p>
+<pre class="lean"><code>import LeanDb.Model
+import LeanApi.Core
+import TicTacToe.Rules
+open LeanDb.Model LeanApi.Core TicTacToe
+
+deriving instance Domain for Player, Square, Move, Status
+
+/-- A board is stored and sent as its moves, and read back by replaying them. -/
+represent Board as List Move by (·.moves) checked Board.replay
+
+structure Game where
+  board : Board
+  deriving Entity</code></pre>
+<p><code>LeanDb.Model</code> is the data model: entities, <code>represent</code>, the generated storage steps. <code>LeanApi.Core</code> is the operations and endpoints.</p>
+<p>The rules file doesn't know about JSON or tables. The server opts the rules' types in: <code>deriving instance Domain</code> for the plain types, and <code>represent</code> for <code>Board</code>.</p>
+<p>The table, the column and the JSON are derived from that:</p>
+<pre class="sh"><code>$ sqlite3 tictactoe.sqlite &#39;.schema game&#39;
+CREATE TABLE IF NOT EXISTS &quot;game&quot; (id INTEGER PRIMARY KEY AUTOINCREMENT, &quot;board&quot; TEXT NOT NULL);
+$ sqlite3 tictactoe.sqlite &#39;SELECT board FROM game WHERE id = 1&#39;
+[{&quot;player&quot;:&quot;x&quot;,&quot;square&quot;:&quot;center&quot;},{&quot;player&quot;:&quot;o&quot;,&quot;square&quot;:&quot;topLeft&quot;},{&quot;player&quot;:&quot;x&quot;,&quot;square&quot;:&quot;top&quot;},{&quot;player&quot;:&quot;o&quot;,&quot;square&quot;:&quot;left&quot;},{&quot;player&quot;:&quot;x&quot;,&quot;square&quot;:&quot;bottom&quot;}]</code></pre>
+<p>The board is stored as its moves, in order. Whose turn it is and who won are still derived, never stored.</p>
+<h3 id="making-a-move">Making a move</h3>
+<pre class="lean"><code>def newGame : Op Empty (Ref Game) :=
+  Game.insert { board := .empty }
+
+inductive MoveError where
+  | noSuchGame
+  | gameOver
+  | notYourTurn
+  | squareTaken</code></pre>
+<p>Even though an illegal move cannot be represented in the board, a client can still send a request with an illegal move, so we want to return the appropriate response with the appropriate error message.</p>
+<pre class="lean"><code>
+/-- Which part of the rule a move breaks. It only picks the error; `require` does the checking. -/
+def MoveError.of (board : Board) (move : Move) : MoveError :=
+  if board.status ∈ [.xWon, .oWon, .draw] then .gameOver
+  else if board.status ≠ move.player.toMove then .notYourTurn
+  else .squareTaken
+
+def move (game : Ref Game) (player : Player) (square : Square) : Op MoveError Status := do
+  let some g ← Game.find game | throw .noSuchGame
+  let m : Move := ⟨player, square⟩ 
+  let ⟨valid⟩ ← require (g.board.ValidMove m) (MoveError.of g.board m) 
+  let board := g.board.play m valid
+  Game.update g { board }
+  return board.status</code></pre>
+<p>How it works:</p>
+<ul>
+<li>Find the game, <code>Game.find</code> searches for the game in the Games table, and throw <code>.noSuchGame</code> if the game doesn't exist.</li>
+<li><code>let m : Move := ⟨player, square⟩</code>, <code>m</code> packs <code>(player, square)</code> in the structure</li>
+<li><code>let ⟨valid⟩ ← require (g.board.ValidMove m) (MoveError.of g.board m)</code> build a proof on runtime that move is valid, and throws a MoveError with 422 status code.</li>
+<li><code>let board := g.board.play m valid</code> creates a new board with the move, and we also pass a proof that the move is valid, then in the next line, we update the database with the updated board.</li>
+</ul>
+<h3 id="the-api">The API</h3>
+<p><code>getGame</code> returns the board and its status:</p>
+<pre class="lean"><code>structure GameView where
+  board  : Board
+  status : Status
+
+inductive GetGameError where
+  | noSuchGame
+
+def getGame (game : Ref Game) : ReadOp GetGameError GameView := do
+  let some g ← Game.find game | throw .noSuchGame
+  return { board := g.board, status := g.board.status }</code></pre>
+<p>Then the API is the list of endpoints:</p>
+<pre class="lean"><code>def api : Api := [
+  post &quot;/games&quot;              newGame,
+  post &quot;/games/:game/moves&quot;  move,
+  get  &quot;/games/:game&quot;        getGame
+]</code></pre>
+<h3 id="running-it">Running it</h3>
+<p>The server's entry point is three lines:</p>
+<pre class="lean"><code>app% server where
+  api := api
+
+def main (args : List String) : IO UInt32 :=
+  server.main args { database := &quot;tictactoe.sqlite&quot; }</code></pre>
+<p><code>lake exe tictactoe</code> serves the API on port 8080. Here's a game, run against a fresh database:</p>
+<pre class="sh"><code>$ curl -X POST localhost:8080/games
+{&quot;ok&quot;:1}
+$ curl -X POST localhost:8080/games/1/moves -d &#39;{&quot;player&quot;:&quot;x&quot;,&quot;square&quot;:&quot;center&quot;}&#39;
+{&quot;ok&quot;:&quot;oToMove&quot;}
+$ curl -X POST localhost:8080/games/1/moves -d &#39;{&quot;player&quot;:&quot;o&quot;,&quot;square&quot;:&quot;center&quot;}&#39;
+{&quot;error&quot;:&quot;squareTaken&quot;}
+$ curl -X POST localhost:8080/games/1/moves -d &#39;{&quot;player&quot;:&quot;x&quot;,&quot;square&quot;:&quot;topLeft&quot;}&#39;
+{&quot;error&quot;:&quot;notYourTurn&quot;}
+$ curl -X POST localhost:8080/games/1/moves -d &#39;{&quot;player&quot;:&quot;o&quot;,&quot;square&quot;:&quot;topLeft&quot;}&#39;
+{&quot;ok&quot;:&quot;xToMove&quot;}
+$ curl -X POST localhost:8080/games/1/moves -d &#39;{&quot;player&quot;:&quot;x&quot;,&quot;square&quot;:&quot;top&quot;}&#39;
+{&quot;ok&quot;:&quot;oToMove&quot;}
+$ curl -X POST localhost:8080/games/1/moves -d &#39;{&quot;player&quot;:&quot;o&quot;,&quot;square&quot;:&quot;left&quot;}&#39;
+{&quot;ok&quot;:&quot;xToMove&quot;}
+$ curl -X POST localhost:8080/games/1/moves -d &#39;{&quot;player&quot;:&quot;x&quot;,&quot;square&quot;:&quot;bottom&quot;}&#39;
+{&quot;ok&quot;:&quot;xWon&quot;}
+$ curl -X POST localhost:8080/games/1/moves -d &#39;{&quot;player&quot;:&quot;o&quot;,&quot;square&quot;:&quot;right&quot;}&#39;
+{&quot;error&quot;:&quot;gameOver&quot;}
+$ curl localhost:8080/games/1
+{&quot;ok&quot;:{&quot;board&quot;:[{&quot;player&quot;:&quot;x&quot;,&quot;square&quot;:&quot;center&quot;},{&quot;player&quot;:&quot;o&quot;,&quot;square&quot;:&quot;topLeft&quot;},{&quot;player&quot;:&quot;x&quot;,&quot;square&quot;:&quot;top&quot;},{&quot;player&quot;:&quot;o&quot;,&quot;square&quot;:&quot;left&quot;},{&quot;player&quot;:&quot;x&quot;,&quot;square&quot;:&quot;bottom&quot;}],&quot;status&quot;:&quot;xWon&quot;}}</code></pre>
+<p>The rejected moves come back with status 422 and change nothing. And the things the domain has no words for:</p>
+<pre class="sh"><code>$ curl -X POST localhost:8080/games/1/moves -d &#39;{&quot;player&quot;:&quot;x&quot;,&quot;square&quot;:&quot;middle&quot;}&#39;
+{&quot;error&quot;:&quot;badRequest&quot;}
+$ curl -X POST localhost:8080/games/1/moves -d &#39;{&quot;player&quot;:&quot;z&quot;,&quot;square&quot;:&quot;center&quot;}&#39;
+{&quot;error&quot;:&quot;badRequest&quot;}
+$ curl -X PUT localhost:8080/games/1
+{&quot;status&quot;:405,&quot;title&quot;:&quot;Method Not Allowed&quot;,&quot;type&quot;:&quot;about:blank&quot;}</code></pre>
+<h2 id="changing-the-rules">Changing the rules</h2>
+<p>Some people play with a house rule: X can't open in the center. That's one more line in the rules:</p>
+<pre class="lean"><code>abbrev Board.ValidMove (board : Board) (move : Move) : Prop :=
+  board.status = move.player.toMove ∧ board.mark move.square = none ∧
+  ¬(board.moves = [] ∧ move.square = .center)   -- house rule: X can&#39;t open in the center</code></pre>
+<p>The server compiles without a single change, and enforces the new rule straight away, because <code>move</code> checks <code>ValidMove</code> whole:</p>
+<pre class="sh"><code>$ curl -X POST localhost:8080/games/2/moves -d &#39;{&quot;player&quot;:&quot;x&quot;,&quot;square&quot;:&quot;center&quot;}&#39;
+{&quot;error&quot;:&quot;squareTaken&quot;}
+$ curl -X POST localhost:8080/games/2/moves -d &#39;{&quot;player&quot;:&quot;x&quot;,&quot;square&quot;:&quot;topLeft&quot;}&#39;
+{&quot;ok&quot;:&quot;oToMove&quot;}
+$ curl -X POST localhost:8080/games/2/moves -d &#39;{&quot;player&quot;:&quot;o&quot;,&quot;square&quot;:&quot;center&quot;}&#39;
+{&quot;ok&quot;:&quot;xToMove&quot;}</code></pre>
+<p>There's one more consequence. The games already in the database were played under the old rules, and game 1 opened in the center:</p>
+<pre class="sh"><code>$ curl -i localhost:8080/games/1
+HTTP/1.1 500 Internal Server Error
+X-Leanapp-Error: storage.corrupt
+{&quot;error&quot;:&quot;internal&quot;}</code></pre>
+<p>Under the new rules it can't be replayed, so the server won't serve it as a valid game. That's correct, but it's not what you want for a game someone is in the middle of. What to do about it is a product decision: keep a rules version with each game, let old games finish under the old rules, or close them. Nothing can make that decision for you. What the replay does is make sure you find out, instead of quietly serving games that the rules say can't exist.</p>
+<p>This is what I mean by the validation rules being automatically applied to the API. The API doesn't keep its own copy of the rules that could fall behind. It checks the rules' own definition, so a new rule is enforced the moment it's written. All the server adds is a name for each way a move can fail.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>Hopefully, I was able to illustrate <em>some</em> of how domain driven development works. The primary aim is to keep the domain model the center of the application, when we want to add new rules or things in the domain, the logic across application boundaries like DB, API etc automatically carries.</p>
+<p>I have deliberately chosen a simple example with only two boundaries, the API server, and database so that the example can be followed.</p>
+<p>In real applications, there are many many boundaries and your datamodel needs to carry across. In the next posts, I hope to show can we create a full stack application in domain driven way.</p>
+<p>GitHub: <a href="https://github.com/theoriclabs/tictactoe/" target="_blank" rel="noopener">https://github.com/theoriclabs/tictactoe/</a></p>
+    </article>
+
+    <footer>
+        <a href="/">Home</a>
+        <a href="/blog/">Blog</a>
+        <a href="mailto:team@theoric.com">Contact</a>
+        <a href="https://x.com/TheoricLabs" target="_blank" rel="noopener">X</a>
+        <a href="https://www.linkedin.com/company/theoriclabs/" target="_blank" rel="noopener">LinkedIn</a>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://unpkg.com/highlightjs-lean@1.2.0/dist/lean.min.js"></script>
+    <script>
+        document.querySelectorAll('article pre[class] > code').forEach(function (code) {
+            code.parentElement.className.split(/\s+/).forEach(function (cls) {
+                if (cls) code.classList.add(cls);
+            });
+            hljs.highlightElement(code);
+        });
+    </script>
+</body>
+</html>
