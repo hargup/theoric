@@ -82,6 +82,36 @@ a:hover { color: #555; }
     font-weight: 600;
 }
 
+/* ---- Products ---- */
+.products-intro { margin-bottom: 2.5rem; }
+.products-intro p { color: #555; margin-top: 0.8rem; }
+.product {
+    border-top: 1px solid #D8D6CF;
+    padding: 1.8rem 0;
+}
+.product-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem 1rem;
+}
+.product-heading h2 { margin: 0; }
+.product-status {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    background: #F1F0EC;
+    color: #555;
+}
+.product-status-live { background: #E8EFE5; color: #36552D; }
+.product > p:last-child { margin-bottom: 0; }
+.product-action {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 0.95rem;
+}
+
 /* ---- Code ---- */
 code {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
@@ -166,6 +196,7 @@ hr {
 footer {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     display: flex;
+    flex-wrap: wrap;
     gap: 1rem;
     margin-top: 3rem;
     font-size: 0.95rem;
