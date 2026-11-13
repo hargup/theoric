@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deriving the runtime to get to #1 on $12 challenge | Theoric</title>
+    <meta name="description" content="Encoding the global constraints of a domain in Lean lets you derive a runtime specialized to it. That took my submission to #1 on the $12 server challenge, ahead of C and Rust.">
+    <link rel="canonical" href="https://theoric.com/blog/deriving_the_runtime/">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <meta property="og:title" content="Deriving the runtime to get to #1 on $12 challenge | Theoric">
+    <meta property="og:description" content="Encoding the global constraints of a domain in Lean lets you derive a runtime specialized to it. That took my submission to #1 on the $12 server challenge, ahead of C and Rust.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://theoric.com/blog/deriving_the_runtime/">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Deriving the runtime to get to #1 on $12 challenge | Theoric">
+    <meta name="twitter:description" content="Encoding the global constraints of a domain in Lean lets you derive a runtime specialized to it. That took my submission to #1 on the $12 server challenge, ahead of C and Rust.">
+    <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+    <a href="/" aria-label="Theoric home"><img class="logo" src="/assets/theoric-stylized-wordmark.svg" alt="Theoric"></a>
+
+    <article>
+        <h1>Deriving the runtime to get to #1 on $12 challenge</h1>
+        <p class="byline">By <a href="https://x.com/hargup13" target="_blank" rel="noopener">Harsh Gupta</a> · <span class="date">October 30, 2026</span></p>
+
+<p><i>The post was published on 13th November, but I'm predating it to the date of the tweet to maintain the chronological record and proof of work</i></p>
+<!-- Human written start, do not edit -->
+
+<p>In the <a href="/blog/domain_driven_development/">previous post</a>, I described how Lean can be used for precisely and abstractly describing the domain you're working with, which I called domain driven development. This obviously reduces bugs. The less understood fact is that domain driven development can also make your code fast, like really fast.</p>
+<p>Your hardware does not understand HTTP requests, or databases, or UI or any of these high-level concepts. The hardware understands very low level concepts like move this data from this pointer to this pointer, and do this computation on the data written at this pointer. So your high-level concepts need to be translated to the low-level. And this translation is done layer by layer. Each layer carrying it's own assumptions, and introducing its own inefficiencies.</p>
+<p>Usually, your language will have something called a "runtime" which dynamically does this high-level to low-level translation. This runtime isn't always the fastest for your application because the runtime is written to support a lots of different kinds of applications. Languages like Rust and C, have a very thin and low-level runtime, so you get to control lots of low-level details making your code fast, but obviously it becomes hard to write low-level code directly. Languages like Python and Javascript have thick runtiimes and they handle a lot of stuff for you, but ofc making things slow.</p>
+<p>In Lean, you can "derive the runtime", meaning, you can describe the high level behavior of your software, and generate the low-level code to implement that behavior, skipping the buggy and inefficient middle layers. Because Lean makes it easy to describe the global constriants and invariants of your software, you can have the low-level code carry over the high level invariants and only do what you really need to do.</p>
+<p>I used this technique on the <a href="https://github.com/arjaythedev/twelve-dollar-server-challenge" target="_blank" rel="noopener">$12 server challenge</a> and got to number one on the leaderboard, ahead of the C and Rust submissions. You can find the submission below. The creator of the challenge also made a good video about it, which you can watch in the tweet below. I was pretty happy to see the tweet go kind of viral on Twitter.</p>
+<!-- Human written start, do not edit -->
+
+<p>Submission: <a href="https://github.com/arjaythedev/twelve-dollar-server-challenge/tree/main/submissions/lean-derive-hargup" target="_blank" rel="noopener">lean-derive-hargup</a></p>
+<blockquote class="twitter-tweet" data-dnt="true" data-align="center"><p lang="en" dir="ltr">It&#39;s official now, my Lean 4 submission is #1 on &quot;$12 server challenge&quot;, serving more users than Rust, C or even hand written assembly.<br><br>The creator of a the challenge did a pretty good job explaining how Lean 4 allows you to create software even more optimized than handwritten C. <a href="https://t.co/cnQ10nhkJZ">pic.twitter.com/cnQ10nhkJZ</a></p>&mdash; Harsh Gupta (@hargup13) <a href="https://twitter.com/hargup13/status/2116422880221409621">October 30, 2026</a></blockquote>
+
+<p>Thanks!</p>
+    </article>
+
+    <footer>
+        <a href="/">Home</a>
+        <a href="/blog/">Blog</a>
+        <a href="/products/">Products</a>
+        <a href="mailto:team@theoric.com">Contact</a>
+        <a href="https://x.com/TheoricLabs" target="_blank" rel="noopener">X</a>
+        <a href="https://www.linkedin.com/company/theoriclabs/" target="_blank" rel="noopener">LinkedIn</a>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://unpkg.com/highlightjs-lean@1.2.0/dist/lean.min.js"></script>
+    <script>
+        document.querySelectorAll('article pre[class] > code').forEach(function (code) {
+            code.parentElement.className.split(/\s+/).forEach(function (cls) {
+                if (cls) code.classList.add(cls);
+            });
+            hljs.highlightElement(code);
+        });
+    </script>
+    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+</body>
+</html>
