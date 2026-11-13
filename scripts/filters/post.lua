@@ -113,5 +113,15 @@ function Pandoc(doc)
   end
 
   doc.blocks = body
+
+  -- Load Twitter's embed script only on posts that embed a tweet.
+  pandoc.Pandoc(body):walk({
+    RawBlock = function(block)
+      if block.format == "html" and block.text:find('class="twitter-tweet"', 1, true) then
+        doc.meta.tweet_embed = true
+      end
+    end,
+  })
+
   return doc
 end

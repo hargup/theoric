@@ -184,6 +184,16 @@ article figcaption {
     margin-top: 0.5rem;
 }
 
+/* ---- Embedded tweets ----
+   The blockquote is the no-JS fallback; widgets.js replaces it with an iframe. */
+article blockquote.twitter-tweet {
+    margin: 1.5rem 0;
+    padding: 0.8rem 1.1rem;
+    border-left: 3px solid #D8D6CF;
+    color: #444;
+}
+article blockquote.twitter-tweet p { margin-top: 0; }
+
 /* ---- Misc ---- */
 hr {
     border: 0;
