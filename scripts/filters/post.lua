@@ -114,6 +114,51 @@ function Pandoc(doc)
 
   doc.blocks = body
 
+  -- A `<!-- toc -->` line becomes a nested table of contents of the post's
+  -- level-2 and level-3 headings, linking to their anchors.
+  local function is_toc_marker(block)
+    return block.t == "RawBlock" and block.format == "html"
+      and block.text:match("^%s*<!%-%-%s*toc%s*%-%->%s*$")
+  end
+
+  local function table_of_contents(blocks)
+    local entries = {}
+    local section = nil
+    for _, block in ipairs(blocks) do
+      if block.t == "Header" and block.identifier ~= "" and (block.level == 2 or block.level == 3) then
+        local link = pandoc.Plain({ pandoc.Link(block.content, "#" .. block.identifier) })
+        if block.level == 2 or section == nil then
+          section = { link }
+          table.insert(entries, section)
+        else
+          if section[2] == nil then section[2] = {} end
+          table.insert(section[2], { link })
+        end
+      end
+    end
+    local items = {}
+    for _, entry in ipairs(entries) do
+      local item = { entry[1] }
+      if entry[2] then table.insert(item, pandoc.BulletList(entry[2])) end
+      table.insert(items, item)
+    end
+    return {
+      pandoc.RawBlock("html", '<nav class="toc" aria-label="Contents"><details open><summary>Contents</summary>'),
+      pandoc.BulletList(items),
+      pandoc.RawBlock("html", "</details></nav>"),
+    }
+  end
+
+  local with_toc = {}
+  for _, block in ipairs(doc.blocks) do
+    if is_toc_marker(block) then
+      for _, b in ipairs(table_of_contents(doc.blocks)) do table.insert(with_toc, b) end
+    else
+      table.insert(with_toc, block)
+    end
+  end
+  doc.blocks = with_toc
+
   -- Load Twitter's embed script only on posts that embed a tweet.
   pandoc.Pandoc(body):walk({
     RawBlock = function(block)

@@ -206,6 +206,26 @@ article blockquote.twitter-tweet {
 }
 article blockquote.twitter-tweet p { margin-top: 0; }
 
+/* ---- Table of contents (generated from a <!-- toc --> marker) ---- */
+article nav.toc {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 0.92rem;
+    line-height: 1.45;
+    margin: 1.5rem 0 2.2rem;
+    padding: 0.9rem 1.2rem;
+    border: 1px solid #D8D6CF;
+    border-radius: 4px;
+    background: #F4F3EF;
+}
+article nav.toc summary {
+    cursor: pointer;
+    font-weight: 600;
+}
+article nav.toc ul { margin: 0.5rem 0 0; padding-left: 1.2rem; }
+article nav.toc ul ul { margin: 0.15rem 0 0.35rem; padding-left: 1.1rem; }
+article nav.toc li { margin: 0.15rem 0; }
+article nav.toc a { color: inherit; }
+
 /* ---- Embedded videos (16:9) ---- */
 article .video {
     aspect-ratio: 16 / 9;
