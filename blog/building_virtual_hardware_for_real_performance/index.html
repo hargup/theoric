@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building Virtual Hardware for Real Performance | Theoric</title>
+    <meta name="description" content="My SF Lean Meetup talk on simulating a GPU in Lean to do GPU performance optimization without the GPU itself: the video, the transcript and the audience Q&amp;A.">
+    <link rel="canonical" href="https://theoric.com/blog/building_virtual_hardware_for_real_performance/">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <meta property="og:title" content="Building Virtual Hardware for Real Performance | Theoric">
+    <meta property="og:description" content="My SF Lean Meetup talk on simulating a GPU in Lean to do GPU performance optimization without the GPU itself: the video, the transcript and the audience Q&amp;A.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://theoric.com/blog/building_virtual_hardware_for_real_performance/">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Building Virtual Hardware for Real Performance | Theoric">
+    <meta name="twitter:description" content="My SF Lean Meetup talk on simulating a GPU in Lean to do GPU performance optimization without the GPU itself: the video, the transcript and the audience Q&amp;A.">
+    <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+    <a href="/" aria-label="Theoric home"><img class="logo" src="/assets/theoric-stylized-wordmark.svg" alt="Theoric"></a>
+
+    <article>
+        <h1>Building Virtual Hardware for Real Performance</h1>
+        <p class="byline">By <a href="https://x.com/hargup13" target="_blank" rel="noopener">Harsh Gupta</a> · <span class="date">November 14, 2026</span></p>
+
+<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/VIDEO_ID" title="Building Virtual Hardware for Real Performance, Harsh Gupta at the SF Lean Meetup" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+
+<p>I gave a talk at the SF Lean meetup on how I've built a GPU Simulator at Theoric to do GPU performance optimization without the GPU itself. Here's an edited transcript of the talk along with audience Q&amp;A:</p>
+<h2 id="introduction">Introduction</h2>
+<p>The aim of Theoric Labs is to make sure all software is bug-free and it runs as fast as it can. The immediate focus is a lot more around compute, because trillions of dollars are going into compute. And the software for compute can be way better than it is now. I want to make sure all these trillions of dollars are used as well as they can be.</p>
+<h2 id="kernel-optimization-is-hardware-in-the-loop-process">Kernel Optimization is hardware-in-the-loop process</h2>
+<p>Kernel optimization is a hardware-in-the-loop process. You run the program, profile it, then try a different variant and do it again. The proposal here is you can simulate the hardware to get the result which you will get from the profiler, without having the hardware itself. And that can dramatically reduce both the cost in terms of money and the time required to do it.</p>
+<figure><a href="loop-hardware.webp"><img src="loop-hardware.webp" alt="The current optimization process: a candidate GPU kernel runs on real hardware, is profiled for time, stalls and hot instructions, and an engineer or agent writes the next candidate. Dollars an hour, seconds to minutes per answer, a different answer each run." loading="lazy"></a><figcaption>Today, every candidate runs on real hardware: repeated for every candidate, every model, every new chip.</figcaption></figure>
+
+<p>Why is hardware in the loop optimization process bad:</p>
+<ul>
+<li>It is slow</li>
+<li>It's expensive.</li>
+<li>The hardware can be used for something else, like serving tokens to customers.</li>
+<li>The cost scales linearly: you cannot really do full cluster experimentation, or the bigger machines you have, the more cost it is. Or the bigger the programs, the more cost it is. It scales linearly, the current way of doing experimentation.</li>
+</ul>
+<h2 id="replacing-real-hardware-with-virtual-hardware">Replacing real hardware with virtual hardware</h2>
+<p>What I'm doing is just replacing this real hardware with virtual hardware, and dramatically reducing the cost. How do I do that? Model the hardware, model the program, and calculate the potential runtime which will come.</p>
+<figure><a href="loop-virtual.webp"><img src="loop-virtual.webp" alt="The same loop with virtual hardware: the candidate kernel runs on a state machine on a CPU core and is profiled for time, stalls and hot instructions. Cents an hour, no queue for hardware, the same answer every run." loading="lazy"></a><figcaption>With virtual hardware, real hardware only confirms the winners.</figcaption></figure>
+
+<p>I'm modeling the hardware as a state machine, and the assembly instructions as state transitions.</p>
+<h2 id="y1-simt-an-extremely-simple-virtual-gpu">Y1-SIMT: an extremely simple virtual GPU</h2>
+<p>Example. This is a toy hardware I built, which actually unlocked a bunch of this work. I've been trying to do this since the start of 2026, and then I got stuck. Couple of weeks ago I was discussing with Gemini how mathematicians break down abstract problems down and make progress on them. It told me that they often first try to tackle a toy problem, and make some variable zero or some variable infinite, or to dramatically reduce the complexity they have to deal with. And then grow it. And I was like, okay, I can do that with a GPU. Then, I built this virtual GPU, which has just four cores and three instructions.</p>
+<figure class="narrow"><a href="y1-simt.webp"><img src="y1-simt.webp" alt="Y1-SIMT: one 4-lane warp on cores C1 to C4, a shared register file of 64 vectors of 4 FP32 values, and 1 MiB of VRAM, connected by LOAD4 and WRITE4." loading="lazy"></a><figcaption>Y1-SIMT: one 4-lane warp on cores C1 to C4, a shared register file, and VRAM.</figcaption></figure>
+
+<p>Y1-SIMT has:</p>
+<ul>
+<li>1 MB of VRAM, and</li>
+<li>64 registers, each holding a 4 length FP32 vector.</li>
+<li>there are four cores, and all four cores work in sync, and execute one instruction parallelly on 4 parallel threads.</li>
+</ul>
+<p>This model is a SIMT programming model, which is the dominant programming model if you use any NVIDIA GPU or AMD GPU. SIMT is single instruction, multiple threads. The same instruction is run on multiple threads.</p>
+<p>Y1-SIMT has 3 instructions:</p>
+<ul>
+<li>load instruction, which loads a vector from VRAM to registers,</li>
+<li>write instruction as it can write from registers to VRAM,</li>
+<li>fused vector dot product and accumulate</li>
+</ul>
+<p>These three instructions are enough to do any matrix multiplication which can fit in the RAM. This is extremely simple, as minimal as a GPU can get.</p>
+<h2 id="y1-simt-in-lean">Y1-SIMT in Lean</h2>
+<p>So the instruction set is a type on the hardware. And the machine is just one function. You just keep repeating it. For each instruction, you have the execution state, an instruction comes in, the execution state gets updated, and then you do it over and over.</p>
+<figure class="code">
+
+<pre class="lean"><code>structure HwSpec where
+  lanes    : Nat   -- threads per warp
+  numRegs  : Nat   -- shared vector registers
+  vramSize : Nat   -- VRAM size in FP32 scalars
+  cyclesLoad cyclesWrite cyclesFdot : Nat
+
+structure RegId (hw : HwSpec) where
+  idx : Nat
+  lt  : idx &lt; hw.numRegs
+
+def reg (n : Nat) (h : n &lt; hw.numRegs := by decide) : RegId hw := ⟨n, h⟩
+
+inductive Instr (hw : HwSpec) where
+  | load4  (src : VecAddr hw) (dst : RegId hw)
+  | write4 (src : RegId hw) (dst : VecAddr hw)
+  | fdot4  (a : RegId hw) (b : RegBlock hw) (c : RegId hw)
+
+-- Can&#39;t be written down: register 64 doesn&#39;t exist.
+#check_failure (.load4 (addr 0) (reg 64) : Instr Y1)</code></pre>
+<figcaption>The instruction set is a type. Every type is indexed by the hardware, and an operand carries the proof that it is in range, so an instruction that names register 64 is a compile error, not a crash at cycle 10,000.</figcaption>
+</figure>
+
+<figure class="code">
+
+<pre class="lean"><code>def step (s : State hw) : Instr hw → Except ExecError (State hw)
+  | .load4 src dst =&gt; do
+      let v ← readVram s src
+      pure { s with regs := s.regs.set dst.idx (some v) dst.lt }
+  | .write4 src dst =&gt; do
+      let v ← readReg s src
+      pure (writeVram s dst v)
+  | .fdot4 a b c =&gt; do
+      let va ← readReg s a
+      let vb ← readBlock s b
+      let vc ← readReg s c
+      let out : Vec hw := Vector.ofFn fun t =&gt; vc[t] + dot va vb[t]
+      pure { s with regs := s.regs.set c.idx (some out) c.lt }
+
+def run (s₀ : State hw) (p : Program hw) :
+    Except ExecError (State hw) :=
+  p.foldlM step s₀</code></pre>
+<figcaption>The machine is one function: <code>step</code> takes a state and an instruction to the next state, or an error, and running a program is a fold.</figcaption>
+</figure>
+
+<h2 id="demo-a-44-matrix-multiply">Demo: a 4×4 matrix multiply</h2>
+<p>This is a visualization. The program is a flat list of instructions. And here we are multiplying a four by four matrix, which lives in VRAM. These two live in VRAM, and we need to calculate C.</p>
+<p>And so before the cores can actually do the multiplication, the data should be loaded into the registers. We execute all these load instructions. Then to multiply, we do four FDOT instructions. And then write it back from the registers to the VRAM.</p>
+<figure><a href="demo-y1.webp"><img src="demo-y1.webp" alt="The Y1-SIMT demo after 20 instructions: the program of twelve LOAD4, four FDOT4 and four WRITE4 instructions, the registers r0 to r11, and VRAM, where C equals A times B." loading="lazy"></a><figcaption>The demo's last state, S<sub>20</sub>: twelve loads, four FDOT4s and four writes later, C equals A × B.</figcaption></figure>
+
+<h2 id="the-virtual-profiler">The virtual profiler</h2>
+<p>Right. Even for this very, very minimalistic GPU, there are multiple ways of doing the same high-level computation. Here we have two matrices: 16 by 8, and 8 by 12. Because these matricies are big enough that the whole thing does not fit in the registers, you have to decide, how do I move data to the registers and how do I move it back?</p>
+<figure class="medium"><a href="matmul-problem.webp"><img src="matmul-problem.webp" alt="C (16 by 12) equals A (16 by 8) times B (8 by 12). One FDOT4 writes 4 outputs of C and reads 4 of the 8 terms." loading="lazy"></a><figcaption>One FDOT4 writes 4 outputs and reads 4 of the 8 terms.</figcaption></figure>
+
+<p>There are multiple ways of doing it, but the three main ways of doing it are:</p>
+<ul>
+<li>Keep A in the registers and then load B chunk by chunk.</li>
+<li>Keep B in the registers and load A chunk by chunk.</li>
+<li>split A and B in the K dimension.</li>
+<li>Naive way, where you load and multiply each chunk one by one.</li>
+</ul>
+<p>There is a 3x difference in terms of the number of instructions it takes to do this matrix multiplication, even for this extremely simple GPU, extremely small matrix multiplication.</p>
+<figure><a href="profiler-y1.webp"><img src="profiler-y1.webp" alt="The virtual profiler's resource chart for the B-stationary program on Y1-SIMT: the four cores and each register over the first 130 cycles, with every read, write and dot product." loading="lazy"></a><figcaption>The virtual profiler's resource chart for the B-stationary program. Keeping all of B in registers takes 248 cycles; split-K takes 344; the naive version, 672.</figcaption></figure>
+
+<p>That motivates that how to do low-level programming well actually matters a lot. And it matters especially a lot when you are dealing with massively parallel computers.</p>
+<h2 id="scaling-to-real-hardware">Scaling to real hardware</h2>
+<p>How do we scale this toy model to a real GPU?</p>
+<ul>
+<li>Increase the hierarchy.</li>
+<li>Increase the number of computational units your GPU has.</li>
+<li>Increase the kinds of computational units your GPU has.</li>
+<li>Increase the number of instructions.</li>
+</ul>
+<p>In our toy model, each instruction was taking one cycle. In real GPUs you have to model lot more things. Basic principle is the same thing, but lot more complex.</p>
+<p>The way I've been doing this is creating, for Hopper, a small Hopper, a medium Hopper and a large Hopper. I should have put an NVIDIA GPU architecture diagram somewhere in there, which I missed. But NVIDIA GPUs have something called an SM, which is a streaming multiprocessor, and they have a subunit called an SMSP, a streaming multiprocessor sub-partition. And in there, there are tensor cores and a lot of other things.</p>
+<p>In the small one, I have only four SMs and four threads per warp. Four threads are executed together, and only one level of memory hierarchy. And that's how I've been growing this. And the large one has the same instruction set as real NVIDIA hardware, and has the same number of cores, and almost all stats are the same as the H200.</p>
+<p>Yeah, this is the architecture diagram for the small one. And this is the medium. This is another layer of hierarchy; there is an L2 cache now. And this is the large one. It has all the SMs which a Hopper has, and the same memory hierarchy and the same instruction set.</p>
+<figure class="pair"><a href="y2-hopper-small.webp"><img src="y2-hopper-small.webp" alt="Y2-Hopper-Small: 4 SMs of 4 SMSPs, global memory and an atomic unit." loading="lazy"></a><a href="y2-hopper-medium.webp"><img src="y2-hopper-medium.webp" alt="Y2-Hopper-Medium: 8 SMs of 4 SMSPs, unified L1 and shared memory, L2 and an HBM timing queue." loading="lazy"></a><figcaption>Y2-Hopper-Small (4 SMs, one level of memory) and Y2-Hopper-Medium (8 real H200 SMs, with L1, L2 and HBM timing).</figcaption></figure>
+
+<figure class="medium"><a href="y2-hopper-large.webp"><img src="y2-hopper-large.webp" alt="Y2-Hopper-Large: 132 SMs with 32 lanes per warp; each SM has 4 schedulers of 16 warps of 32 threads. Unified L1 and shared memory of 256 KB per SM, a 50 MB L2 at 283 cycles, and 141 GB of HBM at 662 cycles and about 4 TB/s." loading="lazy"></a><figcaption>Y2-Hopper-Large: the H200's shape, 132 SMs with the full memory hierarchy.</figcaption></figure>
+
+<h2 id="the-same-as-an-h200-except-deterministic">The same as an H200, except deterministic</h2>
+<p>What is different is our simulation is deterministic. There are some stochastic parts of the actual hardware, and, okay, no, we will not deal with it. And there are some undocumented behaviors. Just make assumptions about them and go along with it. And then calibrate the simulator with the actual hardware, so that you have reasonable guesses for what you have assumed. Right. And no difference with power or temperature or other stuff.</p>
+<p>It's a fully deterministic simulator of the H200, and it's all done in Lean, by the way. Lean's type system is, yeah.</p>
+<h3 id="questions-during-the-talk">Questions during the talk</h3>
+<p><strong>Audience:</strong> Do you plan to account for the thermal flow rate?</p>
+<p><strong>Harsh:</strong> Maybe at some point, if it's becoming important, then maybe. But the main thing is to be able to rank the kernels, and the cycle-level accuracy does not matter that much. But if it turns out it is important, then you can probably model it somehow and figure it out. Yeah. Any other questions?</p>
+<p><strong>Audience:</strong> What about caching? I read that these H200 GPUs have multiple levels of caches. Do you model that?</p>
+<p><strong>Harsh:</strong> The memory hierarchy is modeled. What is the size of the caches, what is the latency between caches, those are modeled. Exactly when the cache is flushed and those kinds of things are actually undocumented. We run experiments and make assumptions about how those are happening.</p>
+<p><strong>Audience:</strong> But your models are deterministic, and you're not really accounting for timing. You're trying to make that uniform so that you can check the efficiency of the program you're running through. Do I understand that correctly?</p>
+<p><strong>Harsh:</strong> Yes. And I'll talk about it later as well, but determinism makes it a pure function. Right. That basically means you don't have to do things step by step. You can calculate a lot more in your simulator symbolically, instead of actually executing each instruction.</p>
+<p><strong>Audience:</strong> Basically, under reasonable operating conditions, your model goes ahead and behaves as the hardware.</p>
+<p><strong>Harsh:</strong> Yes.</p>
+<h2 id="what-lean-buys-us">What Lean buys us</h2>
+<p>Making it deterministic, as a design choice I made, makes the machine a pure function. The spec is a type, and correctness is the base case in here. If it cannot execute an instruction, the compiler rejects it.</p>
+<p>And actually Lean also makes it much more structured for agents to write things, because each instruction is a type. They're much, much less likely to make mistakes.</p>
+<h2 id="results">Results</h2>
+<p>As I mentioned, ranking the programs correctly is the main goal. And then, if you are close to cycle-level accuracy, that's great. Here are some experiments the agent ran. And I'm calling it Y2. The internal name was Yellow, for some random reason. The first one was Y1, the small thing, the minimalistic GPU I built, and this Hopper is Y2. Yeah, it is able to get reasonably close to what the H200 is.</p>
+<figure class="table">
+
+<table>
+<thead>
+<tr>
+<th>Kernel</th>
+<th style="text-align: right;">Y2</th>
+<th style="text-align: right;">H200</th>
+<th style="text-align: right;">Error</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GEMV direct</td>
+<td style="text-align: right;">25,397</td>
+<td style="text-align: right;">27,248</td>
+<td style="text-align: right;">−6.8%</td>
+</tr>
+<tr>
+<td>GEMV async-staged</td>
+<td style="text-align: right;">12,432</td>
+<td style="text-align: right;">11,696</td>
+<td style="text-align: right;">+6.3%</td>
+</tr>
+<tr>
+<td>GEMV two-CTA</td>
+<td style="text-align: right;">25,379</td>
+<td style="text-align: right;">27,968</td>
+<td style="text-align: right;">−9.3%</td>
+</tr>
+<tr>
+<td>SIMT GEMM, 8 CTAs</td>
+<td style="text-align: right;">6,169</td>
+<td style="text-align: right;">6,048</td>
+<td style="text-align: right;">+2.0%</td>
+</tr>
+</tbody>
+</table>
+<figcaption>Y2-Hopper-Medium against real H200 runs, kernel time in ns. It puts the implementations in the right order in 6 of 6 groups, and gives the same answer on every run. The H200 says async staging is 2.33× faster; Y2 says 2.04×.</figcaption>
+</figure>
+
+<p>And we also just decompiled the Qwen kernels to PTX, and then tried to improve them. It is able to find some gains through the virtual loop as well. Though I need to run bigger experiments and see if we are able to get actual end-to-end serving gains. We'll get there.</p>
+<figure class="table">
+
+<table>
+<thead>
+<tr>
+<th>Kernel</th>
+<th style="text-align: right;">Original</th>
+<th style="text-align: right;">Rewrite</th>
+<th style="text-align: right;">Faster by</th>
+<th style="text-align: right;">Predicted</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RMSNorm 3</td>
+<td style="text-align: right;">2.55 µs</td>
+<td style="text-align: right;">2.10 µs</td>
+<td style="text-align: right;">1.21×</td>
+<td style="text-align: right;">1.24×</td>
+</tr>
+<tr>
+<td>RMSNorm 1</td>
+<td style="text-align: right;">2.71 µs</td>
+<td style="text-align: right;">1.84 µs</td>
+<td style="text-align: right;">1.47×</td>
+<td style="text-align: right;">1.52×</td>
+</tr>
+<tr>
+<td>SiLU slice</td>
+<td style="text-align: right;">1.38 µs</td>
+<td style="text-align: right;">1.38 µs</td>
+<td style="text-align: right;">1.00×</td>
+<td style="text-align: right;">1.02×</td>
+</tr>
+</tbody>
+</table>
+<figcaption>An agent rewrote three Qwen3.5-27B kernels with only the simulator in the loop. Both times are measured on an H200; "Predicted" is the simulator's speedup for the same pair. Every version it called correct is bit-identical on the H200.</figcaption>
+</figure>
+
+<h2 id="making-it-1000-faster">Making it 1,000× faster</h2>
+<p>Right now the simulator is running the instructions one by one. It's kind of slow, but it's much cheaper because it's running on CPU. And later I want to make it a thousand X faster, because the same things are running over and over. And because you know you have done this thing before, you just don't have to calculate the things you have done before. You don't have to do it again.</p>
+<p>Right. And because it's a deterministic program, you just know, okay, it's the same pattern of instructions running for a different address or a different part of the thing. You can do that work symbolically. And of course, doing it in Lean makes sure it's done correctly. Just doing it in Lean by itself does not make it correct. You have to design the types well, but that helps you ensure the correctness. That's the idea.</p>
+<h2 id="future">Future</h2>
+<p>And the next step is to do it for all kinds of hardware. All NVIDIA architectures, AMD, TPU, Trainium, and then for all kinds of chips, and full programs. Right now it's running one kernel, but you can also model CUDA streams and bigger programs in a similar manner. And you can also do multi-GPU and bigger cluster things. There are more things to model in there, but it's the same concept, just another level of hierarchy and another level of computation and data movement.</p>
+<p>Yeah. And I believe this is a stepping stone into making sure you can make GPU programs run as fast as possible. Yeah. These are my contact details.</p>
+<h2 id="qa">Q&amp;A</h2>
+<h3 id="where-does-this-sit-among-simulation-and-verification-approaches">Where does this sit among simulation and verification approaches?</h3>
+<p><strong>Audience:</strong> I'm a little bit familiar with other simulation stages in hardware synthesis. And yours is situated decidedly above circuit-level simulation. And even really above behavioral-level simulation, because if you go for circuits, this is employing the ISA, essentially. Above the ISA. And it's also not just about full verification, because you actually run it. You actually run the simulation. It's almost like model checking, almost like a symbolic model checking layer of verification. Because the types don't include everything. It type checks, but it could still have different performance. Not statically analyzable. It's only at runtime you observe that.</p>
+<p><strong>Harsh:</strong> Yeah.</p>
+<h3 id="who-is-it-for">Who is it for?</h3>
+<p><strong>Audience:</strong> Then I'm curious, with your future of memoizing repeated behavior, this then moves you even more abstract, further from the physics. You're targeting kernel simulation here, and it's really for algorithm designers who don't have access, or don't want to pay for access, to a GPU, but do have a lot of CPU time.</p>
+<p><strong>Harsh:</strong> Yes. That's the idea as well. You move up in the abstraction. And this does not cover any of the compiler stack, but we can reuse the existing compiler stack. But it also allows you to build better compilers because, as you're saying, you can know which parts to grow up in terms of the abstraction hierarchy.</p>
+<h3 id="how-does-it-compare-with-traditional-simulators">How does it compare with traditional simulators?</h3>
+<p><strong>Audience:</strong> How does your simulator compare with those coming out of more traditional computer architecture?</p>
+<p><strong>Harsh:</strong> They try to simulate the hardware clock. Basically, they take the clock, see the change, do the thing, and then do it over and over. I'm doing instruction-level simulation instead of clock-level simulation, and those end up being extremely slow.</p>
+<h3 id="can-you-extract-programs-from-the-specification">Can you extract programs from the specification?</h3>
+<p><strong>Audience:</strong> Can you extract actual programs from your specification? Like, do you do program extraction off of your simulated hardware?</p>
+<p><strong>Harsh:</strong> Right now I'm using actual programs.</p>
+<p><strong>Audience:</strong> Your state machine is literally one to one with the instruction set?</p>
+<p><strong>Harsh:</strong> Yes. Yes. I'm modeling the PTX for NVIDIA. They have another layer below PTX called SASS, so the agents did some reverse engineering there, slightly. But for other hardware also, whatever level of access you get to the instruction set, you can model on that.</p>
+<h3 id="could-it-model-thermals-and-energy">Could it model thermals and energy?</h3>
+<p><strong>Audience:</strong> Do you see extending this, certainly not this week, but maybe next year, to do things like generating thermal profiles and generating energy usage, and modeling or predicting basically how the thing performs physically, so that you can look at greener ways of using the same hardware?</p>
+<p><strong>Harsh:</strong> Potentially, yes.</p>
+<p><strong>Audience:</strong> Okay. That's part of your future plan.</p>
+<p><strong>Harsh:</strong> Yes. The future plan is to grow up, down, wide.</p>
+<p>Up is basically growing in terms of abstraction. Right now it's on the instruction set layer, but you can actually search on the tensor expression layer if you are talking about ML programs. There you can model them as pure tensor expressions, and then figure out how can I best lower it. And you can also model all kinds of optimization techniques as well. For example, FlashAttention does some streaming. There are people who have done category theory work to prove why FlashAttention works, and then you can also have it as a search technique. Grow up in terms of abstraction.</p>
+<p>Grow down: right now, as you mentioned, I'm doing instruction level, but you can go down and do circuit-level things, and you can also use it to find better hardware, essentially. And if you model more physics, then the kind of things you are talking about are also feasible.</p>
+<p><strong>Audience:</strong> And wide?</p>
+<p><strong>Harsh:</strong> Wide is similar hardware. GPU, TPU, Trainium. That's wide in terms of the number of hardwares.</p>
+<p><strong>Audience:</strong> The product line.</p>
+<p><strong>Harsh:</strong> Yeah. Wide also in terms of the number of models you are modeling. Because the aim is around inference optimization first, but you can also do training. Wide is the number of models, like Qwen, Kimi, whatever keeps coming up. Speculative decoding, KV cache optimization. All kinds of things. And then also use cases. First training, then inference, but there is no reason to stop at that.</p>
+<h3 id="why-hasnt-anyone-done-this-before">Why hasn't anyone done this before?</h3>
+<p><strong>Audience:</strong> Why didn't someone do this before? Not in Lean, but just in general?</p>
+<p><strong>Harsh:</strong> Oh, it's extremely hard to figure it out. I mean, there are thousands of ways of doing it, and most of them don't work.</p>
+<h3 id="what-does-lean-prove-and-how-do-conditionals-work">What does Lean prove, and how do conditionals work?</h3>
+<p><strong>Audience:</strong> I have two questions. The first is that this is in Lean. Are you proving things about correctness of kernels, about optimality of them, or maybe approximate correctness or approximate optimality, if you want to have some statements about numerical stability? And have you found that using Lean, the fact that you can write proofs in it, helps you to get better solutions? And then my second question is more general context. You're clearly not simulating everything, because if you were, you would have something faster than the GPU running on the CPU. You're probably not simulating actual data, I'm guessing. How do you do conditional programs? Like, if I have an if statement in a program, how does that work?</p>
+<p><strong>Harsh:</strong> This is a good question. GPU programs are generally categorically different from CPU programs, in that there is almost no data-dependent branching, and they are extremely regular. Now, in this specific case, if you see a program, you can actually map the conditional back to the data, and then the simulator can force you to specify the data which leads to data-dependent things. And for everything else, you can leave it open and symbolic.</p>
+<p>The first question was: yes, not proving everything. What it is proving is the instruction set does the correct thing on the hardware, and correct means it's a valid instruction from the instruction set. It's extremely low level. It's like how your tokenizer, if you are talking about LLMs, ensures your word is a valid token. It's a syntactic check at an extremely low level. But there is a way to grow this hierarchy to prove more things. Numerical stability and correctness of data, or things like your matrix multiplication actually being in the bounds you want it to, because you can map how a specific part of the tensor expression maps to the low-level instruction, and you know the characteristics of the low-level instruction. You can map it up. Those things are possible. A lot more machinery needs to be built around it. But in theory, that's it. I would want to do all of that as well.</p>
+<h3 id="what-about-cpus-tpus-and-heterogeneous-systems">What about CPUs, TPUs and heterogeneous systems?</h3>
+<p><strong>Audience:</strong> How do you think the simulator can evolve when the workflow requires, like, CPU and GPU interacting, or, for example, CPU and TPU? How do you think the simulator can evolve?</p>
+<p><strong>Harsh:</strong> Then you will need two simulators. In this case, this is just one machine, and we are not modeling the CPU and GPU interaction, or the heterogeneous things. Then basically there are multiple copies: one TPU simulator, one GPU simulator. Then you need to model the data movement between them, and then you need to model, okay, how do I run the instructions. It's the same thing, but another layer of complexity on top.</p>
+<p><strong>Audience:</strong> Especially for a distributed system. You'd have multiple simulators, of course.</p>
+<p><strong>Harsh:</strong> Yeah, so you will have multiple simulators, and then you need to model the stochastic part: the data can take some more time to reach from one place to another. You will have to model some of that. And for distributed things, there is TLA+, and there are a lot of other programming models. Those can be used, but it's basically the same idea. There as well, by the way, I would want to make the thing deterministic, and then maybe run three copies of various scenarios of what can happen. The same idea can be extended to heterogeneous systems.</p>
+<p><strong>Host:</strong> Let's move the rest to after. Thank you, Harsh.</p>
+    </article>
+
+    <footer>
+        <a href="/">Home</a>
+        <a href="/blog/">Blog</a>
+        <a href="/products/">Products</a>
+        <a href="mailto:team@theoric.com">Contact</a>
+        <a href="https://x.com/TheoricLabs" target="_blank" rel="noopener">X</a>
+        <a href="https://www.linkedin.com/company/theoriclabs/" target="_blank" rel="noopener">LinkedIn</a>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://unpkg.com/highlightjs-lean@1.2.0/dist/lean.min.js"></script>
+    <script>
+        document.querySelectorAll('article pre[class] > code').forEach(function (code) {
+            code.parentElement.className.split(/\s+/).forEach(function (cls) {
+                if (cls) code.classList.add(cls);
+            });
+            hljs.highlightElement(code);
+        });
+    </script>
+</body>
+</html>
