@@ -26,6 +26,37 @@
 <div class="video"><iframe src="https://www.youtube-nocookie.com/embed/VIDEO_ID" title="Building Virtual Hardware for Real Performance, Harsh Gupta at the SF Lean Meetup" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
 
 <p>I gave a talk at the SF Lean meetup on how I've built a GPU Simulator at Theoric to do GPU performance optimization without the GPU itself. Here's an edited transcript of the talk along with audience Q&amp;A:</p>
+<nav class="toc" aria-label="Contents"><details open><summary>Contents</summary>
+<ul>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#kernel-optimization-is-hardware-in-the-loop-process">Kernel Optimization is hardware-in-the-loop process</a></li>
+<li><a href="#replacing-real-hardware-with-virtual-hardware">Replacing real hardware with virtual hardware</a></li>
+<li><a href="#y1-simt-an-extremely-simple-virtual-gpu">Y1-SIMT: an extremely simple virtual GPU</a></li>
+<li><a href="#y1-simt-in-lean">Y1-SIMT in Lean</a></li>
+<li><a href="#demo-a-44-matrix-multiply">Demo: a 4×4 matrix multiply</a></li>
+<li><a href="#the-virtual-profiler">The virtual profiler</a></li>
+<li><a href="#scaling-to-real-hardware">Scaling to real hardware</a></li>
+<li><a href="#the-same-as-an-h200-except-deterministic">The same as an H200, except deterministic</a></li>
+<li><a href="#what-lean-buys-us">What Lean buys us</a></li>
+<li><a href="#results">Results</a></li>
+<li><a href="#making-it-1000-faster">Making it 1,000× faster</a></li>
+<li><a href="#future">Future</a></li>
+<li><a href="#qa">Q&amp;A</a>
+<ul>
+<li><a href="#do-you-account-for-the-thermal-flow-rate">Do you account for the thermal flow rate?</a></li>
+<li><a href="#do-you-model-the-caches">Do you model the caches?</a></li>
+<li><a href="#what-does-determinism-mean-for-timing">What does determinism mean for timing?</a></li>
+<li><a href="#where-does-this-sit-among-simulation-and-verification-approaches">Where does this sit among simulation and verification approaches?</a></li>
+<li><a href="#who-is-it-for">Who is it for?</a></li>
+<li><a href="#how-does-it-compare-with-traditional-simulators">How does it compare with traditional simulators?</a></li>
+<li><a href="#can-you-extract-programs-from-the-specification">Can you extract programs from the specification?</a></li>
+<li><a href="#could-it-model-thermals-and-energy">Could it model thermals and energy?</a></li>
+<li><a href="#why-hasnt-anyone-done-this-before">Why hasn't anyone done this before?</a></li>
+<li><a href="#what-does-lean-prove-and-how-do-conditionals-work">What does Lean prove, and how do conditionals work?</a></li>
+<li><a href="#what-about-cpus-tpus-and-heterogeneous-systems">What about CPUs, TPUs and heterogeneous systems?</a></li>
+</ul></li>
+</ul>
+</details></nav>
 <h2 id="introduction">Introduction</h2>
 <p>The aim of Theoric Labs is to make sure all software is bug-free and it runs as fast as it can. The immediate focus is a lot more around compute, because trillions of dollars are going into compute. And the software for compute can be way better than it is now. I want to make sure all these trillions of dollars are used as well as they can be.</p>
 <h2 id="kernel-optimization-is-hardware-in-the-loop-process">Kernel Optimization is hardware-in-the-loop process</h2>
@@ -152,15 +183,6 @@ def run (s₀ : State hw) (p : Program hw) :
 
 <h2 id="the-same-as-an-h200-except-deterministic">The same as an H200, except deterministic</h2>
 <p>Our Hopper simulation has the same architecture and instruction set and roughly the same behavior except it is deterministic. There are some stochastic parts in the actual hardware; I've decided we will not deal with them. There are some undocumented behaviors. We make assumptions about them and go along with it. then calibrate the simulator with the actual hardware, so that we have reasonable guesses for what we have assumed.</p>
-<h3 id="questions-during-the-talk">Questions during the talk</h3>
-<p><strong>Audience:</strong> Do you plan to account for the thermal flow rate?</p>
-<p><strong>Harsh:</strong> Maybe at some point, if it's becoming important, then maybe. But <em>the main thing is to be able to rank the kernels</em>, and the nanosecond-level accuracy does not matter that much for performance optimization. But if it turns out it is important, then you can probably model it somehow and figure it out. Yeah. Any other questions?</p>
-<p><strong>Audience:</strong> What about caching? I read that these H200 GPUs have multiple levels of caches. Do you model that?</p>
-<p><strong>Harsh:</strong> The memory hierarchy is modeled. What is the size of the caches, what is the latency between caches, those are modeled. Exactly when the cache is flushed and those kinds of things are actually undocumented. We run experiments and make assumptions about how those are happening.</p>
-<p><strong>Audience:</strong> But your models are deterministic, and you're not really accounting for timing. You're trying to make that uniform so that you can check the efficiency of the program you're running through. Do I understand that correctly?</p>
-<p><strong>Harsh:</strong> Yes. And I'll talk about it later as well, but determinism makes it a pure function. Right. That basically means you don't have to do things step by step. You can calculate a lot more in your simulator symbolically, instead of actually executing each instruction.</p>
-<p><strong>Audience:</strong> Basically, under reasonable operating conditions, your model goes ahead and behaves as the hardware.</p>
-<p><strong>Harsh:</strong> Yes.</p>
 <h2 id="what-lean-buys-us">What Lean buys us</h2>
 <p>Making it deterministic, as a design choice I made, makes the machine a pure function. The spec is a type, and correctness is the base case in here. If it cannot execute an instruction, the compiler rejects it.</p>
 <p>And actually Lean also makes it much more structured for agents to write things, because each instruction is a type. <a href="https://theoric.com/blog/why-lean-4-for-agentic-coding/" target="_blank" rel="noopener">Agents are much, much less likely to make mistakes.</a></p>
@@ -259,6 +281,17 @@ def run (s₀ : State hw) (p : Program hw) :
 </ul>
 <p>The simulation is part of the big puzzle of making sure you can make GPU programs run as fast as possible.</p>
 <h2 id="qa">Q&amp;A</h2>
+<h3 id="do-you-account-for-the-thermal-flow-rate">Do you account for the thermal flow rate?</h3>
+<p><strong>Audience:</strong> Do you plan to account for the thermal flow rate?</p>
+<p><strong>Harsh:</strong> Maybe at some point, if it's becoming important, then maybe. But <em>the main thing is to be able to rank the kernels</em>, and the nanosecond-level accuracy does not matter that much for performance optimization. But if it turns out it is important, then you can probably model it somehow and figure it out. Yeah. Any other questions?</p>
+<h3 id="do-you-model-the-caches">Do you model the caches?</h3>
+<p><strong>Audience:</strong> What about caching? I read that these H200 GPUs have multiple levels of caches. Do you model that?</p>
+<p><strong>Harsh:</strong> The memory hierarchy is modeled. What is the size of the caches, what is the latency between caches, those are modeled. Exactly when the cache is flushed and those kinds of things are actually undocumented. We run experiments and make assumptions about how those are happening.</p>
+<h3 id="what-does-determinism-mean-for-timing">What does determinism mean for timing?</h3>
+<p><strong>Audience:</strong> But your models are deterministic, and you're not really accounting for timing. You're trying to make that uniform so that you can check the efficiency of the program you're running through. Do I understand that correctly?</p>
+<p><strong>Harsh:</strong> Yes. And I'll talk about it later as well, but determinism makes it a pure function. Right. That basically means you don't have to do things step by step. You can calculate a lot more in your simulator symbolically, instead of actually executing each instruction.</p>
+<p><strong>Audience:</strong> Basically, under reasonable operating conditions, your model goes ahead and behaves as the hardware.</p>
+<p><strong>Harsh:</strong> Yes.</p>
 <h3 id="where-does-this-sit-among-simulation-and-verification-approaches">Where does this sit among simulation and verification approaches?</h3>
 <p><strong>Audience:</strong> I'm a little bit familiar with other simulation stages in hardware synthesis. And yours is situated decidedly above circuit-level simulation. And even really above behavioral-level simulation, because if you go for circuits, this is employing the ISA, essentially. Above the ISA. And it's also not just about full verification, because you actually run it. You actually run the simulation. It's almost like model checking, almost like a symbolic model checking layer of verification. Because the types don't include everything. It type checks, but it could still have different performance. Not statically analyzable. It's only at runtime you observe that.</p>
 <p><strong>Harsh:</strong> Yeah.</p>
