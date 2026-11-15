@@ -23,7 +23,7 @@
         <h1>Building Virtual Hardware for Real Performance</h1>
         <p class="byline">By <a href="https://x.com/hargup13" target="_blank" rel="noopener">Harsh Gupta</a> · <span class="date">November 14, 2026</span></p>
 
-<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/44X5xVAyvf0" title="Building Virtual Hardware for Real Performance, Harsh Gupta at the SF Lean Meetup" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/VIDEO_ID" title="Building Virtual Hardware for Real Performance, Harsh Gupta at the SF Lean Meetup" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
 
 <p>I gave a talk at the SF Lean meetup on how I've built a GPU Simulator at Theoric to do GPU performance optimization without the GPU itself. Here's an edited transcript of the talk along with audience Q&amp;A:</p>
 <h2 id="introduction">Introduction</h2>
@@ -138,20 +138,23 @@ def run (s₀ : State hw) (p : Program hw) :
 <li>Increase the kinds of computational units your GPU has.</li>
 <li>Increase the number of instructions.</li>
 </ul>
-<p>In our toy model, each instruction was taking one cycle. In real GPUs you have to model lot more things. Basic principle is the same thing, but lot more complex.</p>
-<p>The way I've been doing this is creating, for Hopper, a small Hopper, a medium Hopper and a large Hopper. I should have put an NVIDIA GPU architecture diagram somewhere in there, which I missed. But NVIDIA GPUs have something called an SM, which is a streaming multiprocessor, and they have a subunit called an SMSP, a streaming multiprocessor sub-partition. And in there, there are tensor cores and a lot of other things.</p>
-<p>In the small one, I have only four SMs and four threads per warp. Four threads are executed together, and only one level of memory hierarchy. And that's how I've been growing this. And the large one has the same instruction set as real NVIDIA hardware, and has the same number of cores, and almost all stats are the same as the H200.</p>
-<p>Yeah, this is the architecture diagram for the small one. And this is the medium. This is another layer of hierarchy; there is an L2 cache now. And this is the large one. It has all the SMs which a Hopper has, and the same memory hierarchy and the same instruction set.</p>
+<p>In our toy model, each instruction was taking one cycle. In real GPUs you have to model lot more things. Basic principle is the same thing, but lot more complex. Now, trying to model full real GPUs directly turns out to be a bad idea. I do this by building:</p>
+<ul>
+<li>a small Hopper</li>
+<li>a medium Hopper</li>
+<li>a large Hopper</li>
+</ul>
+<p>Scaling the complexity with each step. NVIDIA GPUs have something called an SM, which is a streaming multiprocessor, and they have a subunit called an SMSP, a streaming multiprocessor sub-partition. In there, there are tensor cores and a lot of other things.</p>
+<p>In the small one, I have only four SMs and four threads per warp. Four threads are executed together, and there is only one level of memory hierarchy. And that's how I've been growing this. The large one has the same instruction set as real NVIDIA hardware, and has the same number of SMs, and almost all stats are the same as the H200.</p>
 <figure class="pair"><a href="y2-hopper-small.webp"><img src="y2-hopper-small.webp" alt="Y2-Hopper-Small: 4 SMs of 4 SMSPs, global memory and an atomic unit." loading="lazy"></a><a href="y2-hopper-medium.webp"><img src="y2-hopper-medium.webp" alt="Y2-Hopper-Medium: 8 SMs of 4 SMSPs, unified L1 and shared memory, L2 and an HBM timing queue." loading="lazy"></a><figcaption>Y2-Hopper-Small (4 SMs, one level of memory) and Y2-Hopper-Medium (8 real H200 SMs, with L1, L2 and HBM timing).</figcaption></figure>
 
 <figure class="medium"><a href="y2-hopper-large.webp"><img src="y2-hopper-large.webp" alt="Y2-Hopper-Large: 132 SMs with 32 lanes per warp; each SM has 4 schedulers of 16 warps of 32 threads. Unified L1 and shared memory of 256 KB per SM, a 50 MB L2 at 283 cycles, and 141 GB of HBM at 662 cycles and about 4 TB/s." loading="lazy"></a><figcaption>Y2-Hopper-Large: the H200's shape, 132 SMs with the full memory hierarchy.</figcaption></figure>
 
 <h2 id="the-same-as-an-h200-except-deterministic">The same as an H200, except deterministic</h2>
-<p>What is different is our simulation is deterministic. There are some stochastic parts of the actual hardware, and, okay, no, we will not deal with it. And there are some undocumented behaviors. Just make assumptions about them and go along with it. And then calibrate the simulator with the actual hardware, so that you have reasonable guesses for what you have assumed. Right. And no difference with power or temperature or other stuff.</p>
-<p>It's a fully deterministic simulator of the H200, and it's all done in Lean, by the way. Lean's type system is, yeah.</p>
+<p>Our Hopper simulation has the same architecture and instruction set and roughly the same behavior except it is deterministic. There are some stochastic parts in the actual hardware; I've decided we will not deal with them. There are some undocumented behaviors. We make assumptions about them and go along with it. then calibrate the simulator with the actual hardware, so that we have reasonable guesses for what we have assumed.</p>
 <h3 id="questions-during-the-talk">Questions during the talk</h3>
 <p><strong>Audience:</strong> Do you plan to account for the thermal flow rate?</p>
-<p><strong>Harsh:</strong> Maybe at some point, if it's becoming important, then maybe. But the main thing is to be able to rank the kernels, and the cycle-level accuracy does not matter that much. But if it turns out it is important, then you can probably model it somehow and figure it out. Yeah. Any other questions?</p>
+<p><strong>Harsh:</strong> Maybe at some point, if it's becoming important, then maybe. But <em>the main thing is to be able to rank the kernels</em>, and the nanosecond-level accuracy does not matter that much for performance optimization. But if it turns out it is important, then you can probably model it somehow and figure it out. Yeah. Any other questions?</p>
 <p><strong>Audience:</strong> What about caching? I read that these H200 GPUs have multiple levels of caches. Do you model that?</p>
 <p><strong>Harsh:</strong> The memory hierarchy is modeled. What is the size of the caches, what is the latency between caches, those are modeled. Exactly when the cache is flushed and those kinds of things are actually undocumented. We run experiments and make assumptions about how those are happening.</p>
 <p><strong>Audience:</strong> But your models are deterministic, and you're not really accounting for timing. You're trying to make that uniform so that you can check the efficiency of the program you're running through. Do I understand that correctly?</p>
@@ -160,9 +163,9 @@ def run (s₀ : State hw) (p : Program hw) :
 <p><strong>Harsh:</strong> Yes.</p>
 <h2 id="what-lean-buys-us">What Lean buys us</h2>
 <p>Making it deterministic, as a design choice I made, makes the machine a pure function. The spec is a type, and correctness is the base case in here. If it cannot execute an instruction, the compiler rejects it.</p>
-<p>And actually Lean also makes it much more structured for agents to write things, because each instruction is a type. They're much, much less likely to make mistakes.</p>
+<p>And actually Lean also makes it much more structured for agents to write things, because each instruction is a type. <a href="https://theoric.com/blog/why-lean-4-for-agentic-coding/" target="_blank" rel="noopener">Agents are much, much less likely to make mistakes.</a></p>
 <h2 id="results">Results</h2>
-<p>As I mentioned, ranking the programs correctly is the main goal. And then, if you are close to cycle-level accuracy, that's great. Here are some experiments the agent ran. And I'm calling it Y2. The internal name was Yellow, for some random reason. The first one was Y1, the small thing, the minimalistic GPU I built, and this Hopper is Y2. Yeah, it is able to get reasonably close to what the H200 is.</p>
+<p>Ranking the programs correctly is the main goal. If you are close to cycle-level accuracy, that's great, but not necessary. Here are some experiments the agent ran. The Hopper simulation is called Y2-Hopper. As you can see, it is able to get reasonably close to what the H200 is.</p>
 <figure class="table">
 
 <table>
@@ -204,7 +207,7 @@ def run (s₀ : State hw) (p : Program hw) :
 <figcaption>Y2-Hopper-Medium against real H200 runs, kernel time in ns. It puts the implementations in the right order in 6 of 6 groups, and gives the same answer on every run. The H200 says async staging is 2.33× faster; Y2 says 2.04×.</figcaption>
 </figure>
 
-<p>And we also just decompiled the Qwen kernels to PTX, and then tried to improve them. It is able to find some gains through the virtual loop as well. Though I need to run bigger experiments and see if we are able to get actual end-to-end serving gains. We'll get there.</p>
+<p>We also just decompiled the Qwen kernels to PTX, and then tried to improve them. It is able to find some gains through the virtual loop as well. Though I need to run bigger experiments and see if we are able to get actual end-to-end serving gains. We'll get there.</p>
 <figure class="table">
 
 <table>
@@ -245,11 +248,16 @@ def run (s₀ : State hw) (p : Program hw) :
 </figure>
 
 <h2 id="making-it-1000-faster">Making it 1,000× faster</h2>
-<p>Right now the simulator is running the instructions one by one. It's kind of slow, but it's much cheaper because it's running on CPU. And later I want to make it a thousand X faster, because the same things are running over and over. And because you know you have done this thing before, you just don't have to calculate the things you have done before. You don't have to do it again.</p>
-<p>Right. And because it's a deterministic program, you just know, okay, it's the same pattern of instructions running for a different address or a different part of the thing. You can do that work symbolically. And of course, doing it in Lean makes sure it's done correctly. Just doing it in Lean by itself does not make it correct. You have to design the types well, but that helps you ensure the correctness. That's the idea.</p>
+<p>Right now the simulator is running the instructions one by one. It's kind of slow, but it's much cheaper because it's running on CPU. And later I want to make it 1000X faster. In ML workloads we often have the same things running over and over. Because you know you have done this thing before, you don't have to calculate the things you have done before.</p>
+<p>Because it's a deterministic program, you just know, okay, it's the same pattern of instructions running for a different address or a different part of the thing. You can do that work symbolically. And of course, doing it in Lean makes sure it's done correctly. Just doing it in Lean by itself does not make it correct. You have to design the types well, but that helps you ensure the correctness. That's the idea.</p>
 <h2 id="future">Future</h2>
-<p>And the next step is to do it for all kinds of hardware. All NVIDIA architectures, AMD, TPU, Trainium, and then for all kinds of chips, and full programs. Right now it's running one kernel, but you can also model CUDA streams and bigger programs in a similar manner. And you can also do multi-GPU and bigger cluster things. There are more things to model in there, but it's the same concept, just another level of hierarchy and another level of computation and data movement.</p>
-<p>Yeah. And I believe this is a stepping stone into making sure you can make GPU programs run as fast as possible. Yeah. These are my contact details.</p>
+<p>The next step is to build simulations for:</p>
+<ul>
+<li>All kinds of hardware: all NVIDIA architectures, AMD, TPU, Trainium.</li>
+<li>Full programs. Right now it's running one kernel, but you can also model CUDA streams and bigger programs in a similar manner.</li>
+<li>Then multi-GPU and bigger cluster simulation. There are more things to model when working with multi-GPU setups, but it's the same concept, just another level of hierarchy and another level of computation and data movement.</li>
+</ul>
+<p>The simulation is part of the big puzzle of making sure you can make GPU programs run as fast as possible.</p>
 <h2 id="qa">Q&amp;A</h2>
 <h3 id="where-does-this-sit-among-simulation-and-verification-approaches">Where does this sit among simulation and verification approaches?</h3>
 <p><strong>Audience:</strong> I'm a little bit familiar with other simulation stages in hardware synthesis. And yours is situated decidedly above circuit-level simulation. And even really above behavioral-level simulation, because if you go for circuits, this is employing the ISA, essentially. Above the ISA. And it's also not just about full verification, because you actually run it. You actually run the simulation. It's almost like model checking, almost like a symbolic model checking layer of verification. Because the types don't include everything. It type checks, but it could still have different performance. Not statically analyzable. It's only at runtime you observe that.</p>
