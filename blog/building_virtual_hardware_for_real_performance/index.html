@@ -4,16 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Building Virtual Hardware for Real Performance | Theoric</title>
-    <meta name="description" content="My SF Lean Meetup talk on simulating a GPU in Lean to do GPU performance optimization without the GPU itself: the video, the transcript and the audience Q&amp;A.">
+    <meta name="description" content="My SF Lean Meetup talk on simulating a GPU in Lean to do GPU performance optimization without the GPU itself: the video, the transcript and the Q&amp;A.">
     <link rel="canonical" href="https://theoric.com/blog/building_virtual_hardware_for_real_performance/">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <meta property="og:title" content="Building Virtual Hardware for Real Performance | Theoric">
-    <meta property="og:description" content="My SF Lean Meetup talk on simulating a GPU in Lean to do GPU performance optimization without the GPU itself: the video, the transcript and the audience Q&amp;A.">
+    <meta property="og:description" content="My SF Lean Meetup talk on simulating a GPU in Lean to do GPU performance optimization without the GPU itself: the video, the transcript and the Q&amp;A.">
     <meta property="og:type" content="article">
     <meta property="og:url" content="https://theoric.com/blog/building_virtual_hardware_for_real_performance/">
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="Building Virtual Hardware for Real Performance | Theoric">
-    <meta name="twitter:description" content="My SF Lean Meetup talk on simulating a GPU in Lean to do GPU performance optimization without the GPU itself: the video, the transcript and the audience Q&amp;A.">
+    <meta name="twitter:description" content="My SF Lean Meetup talk on simulating a GPU in Lean to do GPU performance optimization without the GPU itself: the video, the transcript and the Q&amp;A.">
     <link rel="stylesheet" href="/assets/style.css">
 </head>
 <body>
@@ -23,9 +23,9 @@
         <h1>Building Virtual Hardware for Real Performance</h1>
         <p class="byline">By <a href="https://x.com/hargup13" target="_blank" rel="noopener">Harsh Gupta</a> · <span class="date">November 14, 2026</span></p>
 
-<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/VIDEO_ID" title="Building Virtual Hardware for Real Performance, Harsh Gupta at the SF Lean Meetup" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/44X5xVAyvf0" title="Building Virtual Hardware for Real Performance, Harsh Gupta at the SF Lean Meetup" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
 
-<p>I gave a talk at the SF Lean meetup on how I've built a GPU Simulator at Theoric to do GPU performance optimization without the GPU itself. Here's an edited transcript of the talk along with audience Q&amp;A:</p>
+<p>I gave a talk at the SF Lean meetup on how I've built a GPU Simulator at Theoric to do GPU performance optimization without the GPU itself. Here's an edited transcript of the talk along with Q&amp;A:</p>
 <nav class="toc" aria-label="Contents"><details open><summary>Contents</summary>
 <ul>
 <li><a href="#introduction">Introduction</a></li>
@@ -282,54 +282,53 @@ def run (s₀ : State hw) (p : Program hw) :
 <p>The simulation is part of the big puzzle of making sure you can make GPU programs run as fast as possible.</p>
 <h2 id="qa">Q&amp;A</h2>
 <h3 id="do-you-account-for-the-thermal-flow-rate">Do you account for the thermal flow rate?</h3>
-<p><strong>Audience:</strong> Do you plan to account for the thermal flow rate?</p>
-<p><strong>Harsh:</strong> Maybe at some point, if it's becoming important, then maybe. But <em>the main thing is to be able to rank the kernels</em>, and the nanosecond-level accuracy does not matter that much for performance optimization. But if it turns out it is important, then you can probably model it somehow and figure it out. Yeah. Any other questions?</p>
+<p><strong>Q:</strong> Do you plan to account for the thermal flow rate?</p>
+<p><strong>A:</strong> Maybe at some point, if it's becoming important, then maybe. But <em>the main thing is to be able to rank the kernels</em>, and the nanosecond-level accuracy does not matter that much for performance optimization. But if it turns out it is important, then you can probably model it somehow and figure it out. Yeah. Any other questions?</p>
 <h3 id="do-you-model-the-caches">Do you model the caches?</h3>
-<p><strong>Audience:</strong> What about caching? I read that these H200 GPUs have multiple levels of caches. Do you model that?</p>
-<p><strong>Harsh:</strong> The memory hierarchy is modeled. What is the size of the caches, what is the latency between caches, those are modeled. Exactly when the cache is flushed and those kinds of things are actually undocumented. We run experiments and make assumptions about how those are happening.</p>
+<p><strong>Q:</strong> What about caching? I read that these H200 GPUs have multiple levels of caches. Do you model that?</p>
+<p><strong>A:</strong> The memory hierarchy is modeled. What is the size of the caches, what is the latency between caches, those are modeled. Exactly when the cache is flushed and those kinds of things are actually undocumented. We run experiments and make assumptions about how those are happening.</p>
 <h3 id="what-does-determinism-mean-for-timing">What does determinism mean for timing?</h3>
-<p><strong>Audience:</strong> But your models are deterministic, and you're not really accounting for timing. You're trying to make that uniform so that you can check the efficiency of the program you're running through. Do I understand that correctly?</p>
-<p><strong>Harsh:</strong> Yes. And I'll talk about it later as well, but determinism makes it a pure function. Right. That basically means you don't have to do things step by step. You can calculate a lot more in your simulator symbolically, instead of actually executing each instruction.</p>
-<p><strong>Audience:</strong> Basically, under reasonable operating conditions, your model goes ahead and behaves as the hardware.</p>
-<p><strong>Harsh:</strong> Yes.</p>
+<p><strong>Q:</strong> But your models are deterministic, and you're not really accounting for timing. You're trying to make that uniform so that you can check the efficiency of the program you're running through. Do I understand that correctly?</p>
+<p><strong>A:</strong> Yes. And I'll talk about it later as well, but determinism makes it a pure function. Right. That basically means you don't have to do things step by step. You can calculate a lot more in your simulator symbolically, instead of actually executing each instruction.</p>
+<p><strong>Q:</strong> Basically, under reasonable operating conditions, your model goes ahead and behaves as the hardware.</p>
+<p><strong>A:</strong> Yes.</p>
 <h3 id="where-does-this-sit-among-simulation-and-verification-approaches">Where does this sit among simulation and verification approaches?</h3>
-<p><strong>Audience:</strong> I'm a little bit familiar with other simulation stages in hardware synthesis. And yours is situated decidedly above circuit-level simulation. And even really above behavioral-level simulation, because if you go for circuits, this is employing the ISA, essentially. Above the ISA. And it's also not just about full verification, because you actually run it. You actually run the simulation. It's almost like model checking, almost like a symbolic model checking layer of verification. Because the types don't include everything. It type checks, but it could still have different performance. Not statically analyzable. It's only at runtime you observe that.</p>
-<p><strong>Harsh:</strong> Yeah.</p>
+<p><strong>Q:</strong> I'm a little bit familiar with other simulation stages in hardware synthesis. And yours is situated decidedly above circuit-level simulation. And even really above behavioral-level simulation, because if you go for circuits, this is employing the ISA, essentially. Above the ISA. And it's also not just about full verification, because you actually run it. You actually run the simulation. It's almost like model checking, almost like a symbolic model checking layer of verification. Because the types don't include everything. It type checks, but it could still have different performance. Not statically analyzable. It's only at runtime you observe that.</p>
+<p><strong>A:</strong> Yes.</p>
 <h3 id="who-is-it-for">Who is it for?</h3>
-<p><strong>Audience:</strong> Then I'm curious, with your future of memoizing repeated behavior, this then moves you even more abstract, further from the physics. You're targeting kernel simulation here, and it's really for algorithm designers who don't have access, or don't want to pay for access, to a GPU, but do have a lot of CPU time.</p>
-<p><strong>Harsh:</strong> Yes. That's the idea as well. You move up in the abstraction. And this does not cover any of the compiler stack, but we can reuse the existing compiler stack. But it also allows you to build better compilers because, as you're saying, you can know which parts to grow up in terms of the abstraction hierarchy.</p>
+<p><strong>Q:</strong> I'm curious, with your future of memoizing repeated behavior, this then moves you even more abstract, further from the physics. You're targeting kernel simulation here, and it's really for algorithm designers who don't have access, or don't want to pay for access, to a GPU, but do have a lot of CPU time.</p>
+<p><strong>A:</strong> Yes. That's the idea as well. You move up in the abstraction. And this does not cover any of the compiler stack, but we can reuse the existing compiler stack. But (the simulation) also allows you to build better compilers because, as you're saying, you can know which parts to grow up in terms of the abstraction hierarchy.</p>
 <h3 id="how-does-it-compare-with-traditional-simulators">How does it compare with traditional simulators?</h3>
-<p><strong>Audience:</strong> How does your simulator compare with those coming out of more traditional computer architecture?</p>
-<p><strong>Harsh:</strong> They try to simulate the hardware clock. Basically, they take the clock, see the change, do the thing, and then do it over and over. I'm doing instruction-level simulation instead of clock-level simulation, and those end up being extremely slow.</p>
+<p><strong>Q:</strong> How does your simulator compare with those coming out of more traditional computer architecture?</p>
+<p><strong>A:</strong> They try to simulate the hardware clock. Basically, they take the clock, see the change, do the thing, and then do it over and over. I'm doing instruction-level simulation instead of clock-level simulation, and those end up being extremely slow.</p>
 <h3 id="can-you-extract-programs-from-the-specification">Can you extract programs from the specification?</h3>
-<p><strong>Audience:</strong> Can you extract actual programs from your specification? Like, do you do program extraction off of your simulated hardware?</p>
-<p><strong>Harsh:</strong> Right now I'm using actual programs.</p>
-<p><strong>Audience:</strong> Your state machine is literally one to one with the instruction set?</p>
-<p><strong>Harsh:</strong> Yes. Yes. I'm modeling the PTX for NVIDIA. They have another layer below PTX called SASS, so the agents did some reverse engineering there, slightly. But for other hardware also, whatever level of access you get to the instruction set, you can model on that.</p>
+<p><strong>Q:</strong> Can you extract actual programs from your specification? Like, do you do program extraction off of your simulated hardware?</p>
+<p><strong>A:</strong> Right now I'm using actual programs.</p>
+<p><strong>Q:</strong> Your state machine is literally one to one with the instruction set?</p>
+<p><strong>A:</strong> Yes. Yes. I'm modeling the PTX for NVIDIA. They have another layer below PTX called SASS, so the agents did some reverse engineering there. But for other hardware also, whatever level of access you get to the instruction set, you can model on that.</p>
 <h3 id="could-it-model-thermals-and-energy">Could it model thermals and energy?</h3>
-<p><strong>Audience:</strong> Do you see extending this, certainly not this week, but maybe next year, to do things like generating thermal profiles and generating energy usage, and modeling or predicting basically how the thing performs physically, so that you can look at greener ways of using the same hardware?</p>
-<p><strong>Harsh:</strong> Potentially, yes.</p>
-<p><strong>Audience:</strong> Okay. That's part of your future plan.</p>
-<p><strong>Harsh:</strong> Yes. The future plan is to grow up, down, wide.</p>
+<p><strong>Q:</strong> Do you see extending this, certainly not this week, but maybe next year, to do things like generating thermal profiles and generating energy usage, and modeling or predicting basically how the thing performs physically, so that you can look at greener ways of using the same hardware?</p>
+<p><strong>A:</strong> Potentially, yes.</p>
+<p><strong>Q:</strong> Okay. That's part of your future plan.</p>
+<p><strong>A:</strong> Yes. The future plan is to grow up, down, wide.</p>
 <p>Up is basically growing in terms of abstraction. Right now it's on the instruction set layer, but you can actually search on the tensor expression layer if you are talking about ML programs. There you can model them as pure tensor expressions, and then figure out how can I best lower it. And you can also model all kinds of optimization techniques as well. For example, FlashAttention does some streaming. There are people who have done category theory work to prove why FlashAttention works, and then you can also have it as a search technique. Grow up in terms of abstraction.</p>
 <p>Grow down: right now, as you mentioned, I'm doing instruction level, but you can go down and do circuit-level things, and you can also use it to find better hardware, essentially. And if you model more physics, then the kind of things you are talking about are also feasible.</p>
-<p><strong>Audience:</strong> And wide?</p>
-<p><strong>Harsh:</strong> Wide is similar hardware. GPU, TPU, Trainium. That's wide in terms of the number of hardwares.</p>
-<p><strong>Audience:</strong> The product line.</p>
-<p><strong>Harsh:</strong> Yeah. Wide also in terms of the number of models you are modeling. Because the aim is around inference optimization first, but you can also do training. Wide is the number of models, like Qwen, Kimi, whatever keeps coming up. Speculative decoding, KV cache optimization. All kinds of things. And then also use cases. First training, then inference, but there is no reason to stop at that.</p>
+<p><strong>Q:</strong> And wide?</p>
+<p><strong>A:</strong> Wide is similar hardware. GPU, TPU, Trainium. That's wide in terms of the number of hardwares.</p>
+<p><strong>Q:</strong> The product line.</p>
+<p><strong>A:</strong> Yeah. Wide also in terms of the number of models you are modeling. Because the aim is around inference optimization first, but you can also do training. Wide is the number of models, like Qwen, Kimi, whatever keeps coming up. Speculative decoding, KV cache optimization. All kinds of things. And then also use cases. First training, then inference, but there is no reason to stop at that.</p>
 <h3 id="why-hasnt-anyone-done-this-before">Why hasn't anyone done this before?</h3>
-<p><strong>Audience:</strong> Why didn't someone do this before? Not in Lean, but just in general?</p>
-<p><strong>Harsh:</strong> Oh, it's extremely hard to figure it out. I mean, there are thousands of ways of doing it, and most of them don't work.</p>
+<p><strong>Q:</strong> Why didn't someone do this before? Not in Lean, but just in general?</p>
+<p><strong>A:</strong> Oh, it's extremely hard to figure it out. There are thousands of ways of doing it, and most of them don't work.</p>
 <h3 id="what-does-lean-prove-and-how-do-conditionals-work">What does Lean prove, and how do conditionals work?</h3>
-<p><strong>Audience:</strong> I have two questions. The first is that this is in Lean. Are you proving things about correctness of kernels, about optimality of them, or maybe approximate correctness or approximate optimality, if you want to have some statements about numerical stability? And have you found that using Lean, the fact that you can write proofs in it, helps you to get better solutions? And then my second question is more general context. You're clearly not simulating everything, because if you were, you would have something faster than the GPU running on the CPU. You're probably not simulating actual data, I'm guessing. How do you do conditional programs? Like, if I have an if statement in a program, how does that work?</p>
-<p><strong>Harsh:</strong> This is a good question. GPU programs are generally categorically different from CPU programs, in that there is almost no data-dependent branching, and they are extremely regular. Now, in this specific case, if you see a program, you can actually map the conditional back to the data, and then the simulator can force you to specify the data which leads to data-dependent things. And for everything else, you can leave it open and symbolic.</p>
+<p><strong>Q:</strong> I have two questions. The first is that this is in Lean. Are you proving things about correctness of kernels, about optimality of them, or maybe approximate correctness or approximate optimality, if you want to have some statements about numerical stability? And have you found that using Lean, the fact that you can write proofs in it, helps you to get better solutions? And then my second question is more general context. You're clearly not simulating everything, because if you were, you would have something faster than the GPU running on the CPU. You're probably not simulating actual data, I'm guessing. How do you do conditional programs? Like, if I have an if statement in a program, how does that work?</p>
+<p><strong>A:</strong> This is a good question. GPU programs are generally categorically different from CPU programs, in that there is almost no data-dependent branching, and they are extremely regular. Now, in this specific case, if you see a program, you can actually map the conditional back to the data, and then the simulator can force you to specify the data which leads to data-dependent things. And for everything else, you can leave it open and symbolic.</p>
 <p>The first question was: yes, not proving everything. What it is proving is the instruction set does the correct thing on the hardware, and correct means it's a valid instruction from the instruction set. It's extremely low level. It's like how your tokenizer, if you are talking about LLMs, ensures your word is a valid token. It's a syntactic check at an extremely low level. But there is a way to grow this hierarchy to prove more things. Numerical stability and correctness of data, or things like your matrix multiplication actually being in the bounds you want it to, because you can map how a specific part of the tensor expression maps to the low-level instruction, and you know the characteristics of the low-level instruction. You can map it up. Those things are possible. A lot more machinery needs to be built around it. But in theory, that's it. I would want to do all of that as well.</p>
 <h3 id="what-about-cpus-tpus-and-heterogeneous-systems">What about CPUs, TPUs and heterogeneous systems?</h3>
-<p><strong>Audience:</strong> How do you think the simulator can evolve when the workflow requires, like, CPU and GPU interacting, or, for example, CPU and TPU? How do you think the simulator can evolve?</p>
-<p><strong>Harsh:</strong> Then you will need two simulators. In this case, this is just one machine, and we are not modeling the CPU and GPU interaction, or the heterogeneous things. Then basically there are multiple copies: one TPU simulator, one GPU simulator. Then you need to model the data movement between them, and then you need to model, okay, how do I run the instructions. It's the same thing, but another layer of complexity on top.</p>
-<p><strong>Audience:</strong> Especially for a distributed system. You'd have multiple simulators, of course.</p>
-<p><strong>Harsh:</strong> Yeah, so you will have multiple simulators, and then you need to model the stochastic part: the data can take some more time to reach from one place to another. You will have to model some of that. And for distributed things, there is TLA+, and there are a lot of other programming models. Those can be used, but it's basically the same idea. There as well, by the way, I would want to make the thing deterministic, and then maybe run three copies of various scenarios of what can happen. The same idea can be extended to heterogeneous systems.</p>
-<p><strong>Host:</strong> Let's move the rest to after. Thank you, Harsh.</p>
+<p><strong>Q:</strong> How do you think the simulator can evolve when the workflow requires, like, CPU and GPU interacting, or, for example, CPU and TPU? How do you think the simulator can evolve?</p>
+<p><strong>A:</strong> Then you will need two simulators. In this case, this is just one machine, and we are not modeling the CPU and GPU interaction, or the heterogeneous things. Then basically there are multiple copies: one TPU simulator, one GPU simulator. Then you need to model the data movement between them, and then you need to model, okay, how do I run the instructions. It's the same thing, but another layer of complexity on top.</p>
+<p><strong>Q:</strong> Especially for a distributed system. You'd have multiple simulators, of course.</p>
+<p><strong>A:</strong> Yeah, so you will have multiple simulators, and then you need to model the stochastic part: the data can take some more time to reach from one place to another. You will have to model some of that. And for distributed things, there is TLA+, and there are a lot of other programming models. Those can be used, but it's basically the same idea. There as well, by the way, I would want to make the thing deterministic, and then maybe run three copies of various scenarios of what can happen. The same idea can be extended to heterogeneous systems.</p>
     </article>
 
     <footer>

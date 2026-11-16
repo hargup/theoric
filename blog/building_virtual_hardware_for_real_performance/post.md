@@ -1,5 +1,5 @@
 ---
-description: "My SF Lean Meetup talk on simulating a GPU in Lean to do GPU performance optimization without the GPU itself: the video, the transcript and the Q Q&A."
+description: "My SF Lean Meetup talk on simulating a GPU in Lean to do GPU performance optimization without the GPU itself: the video, the transcript and the Q&A."
 author: Harsh Gupta
 author_url: https://x.com/hargup13
 date: November 14, 2026
@@ -8,9 +8,9 @@ subtitle: false
 
 # Building Virtual Hardware for Real Performance
 
-<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/VIDEO_ID" title="Building Virtual Hardware for Real Performance, Harsh Gupta at the SF Lean Meetup" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
+<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/44X5xVAyvf0" title="Building Virtual Hardware for Real Performance, Harsh Gupta at the SF Lean Meetup" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe></div>
 
-I gave a talk at the SF Lean meetup on how I've built a GPU Simulator at Theoric to do GPU performance optimization without the GPU itself. Here's an edited transcript of the talk along with Q Q&A:
+I gave a talk at the SF Lean meetup on how I've built a GPU Simulator at Theoric to do GPU performance optimization without the GPU itself. Here's an edited transcript of the talk along with Q&A:
 
 <!-- toc -->
 
